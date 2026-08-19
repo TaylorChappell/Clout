@@ -1,56 +1,39 @@
-# CLOUT Studios Frontend
+# CLOUT Frontend - Static GitHub Pages Build
 
-React + Vite frontend for the CLOUT Studios website and holder dashboard.
+This version does not use Vite, React, npm, or a build step.
 
-## Local development
+## Deploy to GitHub Pages
 
-```bash
-npm install
-npm run dev
-```
+1. Delete the old frontend files from the `Clout` repository, especially the old Vite `index.html` and `/src` folder.
+2. Upload the **contents of this folder directly to the repository root** so `index.html` is at the top level.
+3. Commit/push to `main`.
+4. GitHub: **Settings -> Pages**.
+5. Under Build and deployment choose **Deploy from a branch**.
+6. Branch: **main**. Folder: **/(root)**.
+7. Save.
 
-## Production build
+Your page should then load from:
 
-```bash
-npm install
-npm run build
-npm run preview
-```
+`https://taylorchappell.github.io/Clout/`
 
-Vite writes the production website to `dist/`.
+The browser should request:
 
-## GitHub Pages
+- `/Clout/assets/styles.css`
+- `/Clout/assets/app.js`
 
-The project includes `.github/workflows/deploy-pages.yml` and is configured with relative Vite asset paths so it can run from a GitHub Pages repository subdirectory or a custom domain.
+It should never request `/src/main.jsx`.
 
-In the GitHub repository, open **Settings -> Pages** and set **Source** to **GitHub Actions**. Push to `main`; the workflow builds and deploys `dist/` automatically.
+## Important backend requirement
 
-See `GITHUB_PAGES.md` for the exact steps.
+The frontend uses:
 
-## CLOUT holder authentication
+`https://cloutstudiosserver-production.up.railway.app`
 
-Connecting Phantom is only the wallet connection step. CLOUT login then performs:
+Holder login still requires these live backend routes:
 
-1. Connect Phantom.
-2. Request a backend wallet challenge.
-3. Sign the challenge with Phantom.
-4. Verify the signature with the backend.
-5. Save the returned holder session token.
-6. Restore that token on future page loads.
+- POST `/v1/public/holder/challenge`
+- POST `/v1/public/holder/verify`
+- GET `/v1/public/holder/session`
+- GET `/v1/public/holder/dashboard`
 
-The session is stored in local storage under `clout_holder_session` and the dashboard sends it as a bearer token.
-
-## Environment variables
-
-Copy `.env.example` to `.env` for local overrides.
-
-- `VITE_CLOUT_API_URL`
-- `VITE_CLOUT_GAME_URL`
-- `VITE_CLOUT_GROUP_URL`
-- `VITE_CLOUT_TOKEN_CA`
-
-The production API defaults to `https://cloutstudiosserver-production.up.railway.app`.
-
-## Browser extension warnings
-
-Messages such as `ObjectMultiplex`, `app-init-liveness`, `background-liveness`, and `MaxListenersExceededWarning` originating from `contentscript.js` are emitted by injected wallet/browser-extension code. They are separate from a site asset 404 such as `/src/main.jsx`.
+If `/holder/session` is still a 404, Railway is still running a backend without the holder auth routes. The static frontend will load correctly, but holder login cannot complete until the backend routes are live.

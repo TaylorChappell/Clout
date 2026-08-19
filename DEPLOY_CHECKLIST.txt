@@ -1,0 +1,12 @@
+CLOUT GITHUB PAGES CHECKLIST
+
+[ ] Repository root contains index.html
+[ ] Repository root contains assets/app.js
+[ ] Repository root contains assets/styles.css
+[ ] There is NO <script src="/src/main.jsx"> in index.html
+[ ] Settings > Pages > Source = Deploy from a branch
+[ ] Branch = main
+[ ] Folder = /(root)
+[ ] Visit https://taylorchappell.github.io/Clout/
+[ ] DevTools Network shows /Clout/assets/app.js = 200
+[ ] DevTools Network does NOT show /src/main.jsx
