@@ -1,62 +1,56 @@
-# CLOUT Studios frontend
+# CLOUT Studios Frontend
 
-Complete React/Vite frontend wired to the CLOUT Railway backend.
+React + Vite frontend for the CLOUT Studios website and holder dashboard.
 
-## Important wallet auth fix
-
-Connecting Phantom is only step one. This frontend performs the full holder authentication flow:
-
-1. Phantom `connect()`
-2. `POST /v1/public/holder/challenge`
-3. Phantom `signMessage()` using the exact backend message
-4. `POST /v1/public/holder/verify`
-5. Store the backend `sessionToken` in `localStorage` under `clout_holder_session`
-6. Load `/v1/public/holder/dashboard`
-7. On page refresh, restore `/v1/public/holder/session` without reopening Phantom
-
-If the deployed backend returns 404 for any `/v1/public/holder/*` route, the UI now explains that the Railway service does not contain the holder auth routes instead of showing a bare "Not Found" message.
-
-## Run locally
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+## Production build
 
 ```bash
+npm install
 npm run build
+npm run preview
 ```
 
-## Environment
+Vite writes the production website to `dist/`.
 
-Copy `.env.example` to `.env` when needed.
+## GitHub Pages
 
-The backend defaults to:
+The project includes `.github/workflows/deploy-pages.yml` and is configured with relative Vite asset paths so it can run from a GitHub Pages repository subdirectory or a custom domain.
 
-`https://cloutstudiosserver-production.up.railway.app`
+In the GitHub repository, open **Settings -> Pages** and set **Source** to **GitHub Actions**. Push to `main`; the workflow builds and deploys `dist/` automatically.
 
-Optional variables:
+See `GITHUB_PAGES.md` for the exact steps.
 
+## CLOUT holder authentication
+
+Connecting Phantom is only the wallet connection step. CLOUT login then performs:
+
+1. Connect Phantom.
+2. Request a backend wallet challenge.
+3. Sign the challenge with Phantom.
+4. Verify the signature with the backend.
+5. Save the returned holder session token.
+6. Restore that token on future page loads.
+
+The session is stored in local storage under `clout_holder_session` and the dashboard sends it as a bearer token.
+
+## Environment variables
+
+Copy `.env.example` to `.env` for local overrides.
+
+- `VITE_CLOUT_API_URL`
 - `VITE_CLOUT_GAME_URL`
 - `VITE_CLOUT_GROUP_URL`
 - `VITE_CLOUT_TOKEN_CA`
 
-## Backend requirement
+The production API defaults to `https://cloutstudiosserver-production.up.railway.app`.
 
-The deployed backend must expose:
+## Browser extension warnings
 
-- `GET /v1/public/version`
-- `POST /v1/public/holder/challenge`
-- `POST /v1/public/holder/verify`
-- `GET /v1/public/holder/session`
-- `GET /v1/public/holder/dashboard`
-- `PATCH /v1/public/holder/preferences`
-- `POST /v1/public/holder/logout`
-
-With the backend v2 package, `/v1/public/version` should report build `holder-auth-2026-08-19-v2`.
-
-## Current backend limitation
-
-The backend package currently stores Roblox profile fields but does not yet expose a public Roblox username/group verification endpoint. The dashboard therefore displays an existing linked Roblox profile if one is already stored, but does not fake a linking request that the backend cannot process.
+Messages such as `ObjectMultiplex`, `app-init-liveness`, `background-liveness`, and `MaxListenersExceededWarning` originating from `contentscript.js` are emitted by injected wallet/browser-extension code. They are separate from a site asset 404 such as `/src/main.jsx`.
