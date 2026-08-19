@@ -35,5 +35,3 @@ Holder login still requires these live backend routes:
 - POST `/v1/public/holder/verify`
 - GET `/v1/public/holder/session`
 - GET `/v1/public/holder/dashboard`
-
-If `/holder/session` is still a 404, Railway is still running a backend without the holder auth routes. The static frontend will load correctly, but holder login cannot complete until the backend routes are live.
