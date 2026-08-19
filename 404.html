@@ -1,4 +1,279 @@
 <!doctype html>
-<meta charset="utf-8">
-<title>CLOUT</title>
-<script>location.replace('./' + location.hash);</script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#060a12" />
+  <meta name="description" content="CLOUT Studios. Market-driven games. One transparent studio." />
+  <title>CLOUT Studios</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="page-shell" id="public-site">
+    <header class="topbar">
+      <a class="wordmark" href="#top" aria-label="CLOUT Studios home">
+        <span class="clout-mark">C</span>
+        <span>CLOUT</span>
+      </a>
+      <nav class="topnav" aria-label="Primary navigation">
+        <a href="#games">Our Games</a>
+        <a href="#updates">Updates</a>
+        <a href="#statements">Weekly Statements</a>
+        <a href="#holders">Holders</a>
+      </nav>
+      <div class="top-actions" id="header-auth">
+        <button class="btn btn-solid" id="connect-wallet-top" type="button"><span class="mini-mark">C</span> Connect Wallet</button>
+      </div>
+    </header>
+
+    <div id="global-notice" class="notice-wrap" hidden></div>
+
+    <main>
+      <section class="hero" id="top">
+        <div class="hero-atmosphere" aria-hidden="true"></div>
+        <div class="hero-gridlines" aria-hidden="true"></div>
+        <div class="hero-copy reveal">
+          <span class="section-label">CLOUT STUDIOS</span>
+          <h1>Market-driven games.<br><span>One transparent studio.</span></h1>
+          <p>We build Roblox games around markets, progression and competition, then publish the numbers behind the studio.</p>
+          <div class="hero-actions">
+            <a class="btn btn-solid btn-wide" href="#games">Our Games <span>↗</span></a>
+            <button class="btn btn-line btn-wide wallet-action" type="button">Connect Wallet</button>
+          </div>
+        </div>
+        <div class="hero-visual reveal" aria-hidden="true">
+          <div class="hero-ring ring-one"></div>
+          <div class="hero-ring ring-two"></div>
+          <div class="hero-core">
+            <div class="core-glow"></div>
+            <span>C</span>
+          </div>
+          <div class="hero-tick tick-a">ROBLOX</div>
+          <div class="hero-tick tick-b">SOLANA</div>
+          <div class="hero-tick tick-c">STUDIO</div>
+        </div>
+        <div class="hero-bottom">
+          <span>Games first</span>
+          <span>Revenue reported weekly</span>
+          <span>Holder distributions tracked</span>
+        </div>
+      </section>
+
+      <section class="editorial-section games-section" id="games">
+        <div class="section-intro reveal">
+          <span class="section-label">OUR GAMES</span>
+          <h2>Built to be played.<br>Built to keep moving.</h2>
+          <p>Each title has its own economy, progression and identity. Studio reporting sits above the games, not inside them.</p>
+        </div>
+
+        <div class="games-layout reveal">
+          <article class="game-tile game-clout">
+            <div class="game-art">
+              <div class="game-grid"></div>
+              <div class="game-mark">C</div>
+              <div class="market-lines"><i></i><i></i><i></i><i></i><i></i></div>
+              <span class="game-status">LIVE</span>
+            </div>
+            <div class="game-info">
+              <div>
+                <span class="tiny-label">ROBLOX</span>
+                <h3>CLOUT</h3>
+              </div>
+              <p>A market simulator built around trading, competition and portfolio progression.</p>
+              <a class="arrow-link" id="clout-game-link" href="#" target="_blank" rel="noreferrer">Open game <span>↗</span></a>
+            </div>
+          </article>
+
+          <article class="game-tile game-paper">
+            <div class="game-art">
+              <div class="paper-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <strong>PAPER<br>TRADE</strong>
+              <span class="game-status game-status-muted">COMING SOON</span>
+            </div>
+            <div class="game-info">
+              <div>
+                <span class="tiny-label">ROBLOX</span>
+                <h3>Paper Trade</h3>
+              </div>
+              <p>Paper trading for prediction markets and stocks, built as a competitive Roblox experience.</p>
+              <span class="arrow-link disabled-link">In development</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="editorial-section updates-section" id="updates">
+        <div class="section-intro horizontal reveal">
+          <div>
+            <span class="section-label">UPDATES</span>
+            <h2>What changed.</h2>
+          </div>
+          <p>Build notes, releases and studio changes, newest first.</p>
+        </div>
+        <div class="updates-layout" id="updates-grid">
+          <div class="section-loading">Loading published updates</div>
+        </div>
+      </section>
+
+      <section class="editorial-section statements-section" id="statements">
+        <div class="section-intro horizontal reveal">
+          <div>
+            <span class="section-label">WEEKLY STATEMENTS</span>
+            <h2>The studio, in numbers.</h2>
+          </div>
+          <div class="currency-switch" aria-label="Statement currency">
+            <button type="button" data-currency="usd" class="active">USD</button>
+            <button type="button" data-currency="sol">SOL</button>
+            <button type="button" data-currency="robux">ROBUX</button>
+          </div>
+        </div>
+        <div id="statement-container" class="statement-frame">
+          <div class="section-loading">Loading weekly statements</div>
+        </div>
+      </section>
+
+      <section class="holder-zone" id="holders">
+        <div class="qualify-panel reveal">
+          <div class="qualify-number-block">
+            <div class="yellow-haze"></div>
+            <div class="one-percent">1<span>%</span></div>
+            <strong>Minimum eligible ownership</strong>
+            <small>Recorded at the weekly distribution snapshot</small>
+            <div class="qualify-scale"><i></i></div>
+          </div>
+          <div class="qualify-copy">
+            <h2>Hold 1% or more to<br>qualify.</h2>
+            <p>Wallets holding at least 1% of the published CLOUT supply at a distribution snapshot qualify for that reporting period.</p>
+            <div class="qualify-facts">
+              <div><strong>Snapshot qualified</strong><span>Balance recorded when the period closes</span></div>
+              <div><strong>Holder selected</strong><span>Receive an approved payout in SOL or Robux</span></div>
+            </div>
+            <button class="holder-cta wallet-action" type="button">Check my position <span>↗</span></button>
+          </div>
+        </div>
+
+        <div class="payout-path reveal">
+          <div class="path-title">
+            <h3>From play to<br>payout.</h3>
+            <p>Every distribution follows the same reported path.</p>
+          </div>
+          <div class="path-track">
+            <article><span>01</span><i></i><strong>Games generate revenue</strong><p>CLOUT, Paper Trade and future releases</p></article>
+            <article><span>02</span><i></i><strong>Operations are reported</strong><p>Costs, development and reserves</p></article>
+            <article><span>03</span><i></i><strong>The approved pool closes</strong><p>A frozen public statement for the period</p></article>
+            <article><span>04</span><i></i><strong>Eligible holders are paid</strong><p>SOL or Robux, based on holder preference</p></article>
+          </div>
+        </div>
+
+        <div class="payment-choice reveal">
+          <div class="payment-heading">
+            <h3>Choose how you're paid.</h3>
+            <p>Robux requires a linked Roblox username and CLOUT group membership.</p>
+          </div>
+          <div class="payment-grid">
+            <article>
+              <div class="solana-logo" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div><strong>Solana</strong><span>Sent directly to the connected wallet</span></div>
+              <small>On-chain</small>
+            </article>
+            <article>
+              <div class="roblox-logo" aria-hidden="true"><span></span></div>
+              <div><strong>Robux</strong><span>Sent after Roblox account verification</span></div>
+              <small class="yellow-text">+20% value</small>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-main">
+        <a class="wordmark" href="#top"><span class="clout-mark">C</span><span>CLOUT</span></a>
+        <p>Market-driven games. One transparent studio.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#games">Our Games</a>
+        <a href="#updates">Updates</a>
+        <a href="#statements">Statements</a>
+        <a href="./terms.html">Terms</a>
+        <a href="./privacy.html">Privacy</a>
+      </div>
+      <span class="footer-copy">© 2026 CLOUT Studios</span>
+    </footer>
+  </div>
+
+  <section class="dashboard" id="holder-dashboard" hidden>
+    <header class="topbar dashboard-topbar">
+      <a class="wordmark" href="#top" id="dashboard-home"><span class="clout-mark">C</span><span>CLOUT</span></a>
+      <div class="top-actions">
+        <button class="btn btn-line" id="dashboard-back" type="button">Back</button>
+        <button class="btn btn-line" id="holder-logout" type="button">Log out</button>
+      </div>
+    </header>
+
+    <div class="dashboard-body">
+      <div id="dashboard-notice" class="dashboard-notice" hidden></div>
+      <div class="dashboard-heading">
+        <div>
+          <span class="section-label">HOLDER DASHBOARD</span>
+          <h1>My CLOUT</h1>
+          <span class="wallet-display" id="dashboard-wallet">—</span>
+        </div>
+        <button class="btn btn-line" id="dashboard-refresh" type="button">Refresh ↻</button>
+      </div>
+
+      <div class="dashboard-stats">
+        <article class="stat-main"><span>CLOUT held</span><strong id="metric-balance">—</strong><small>Live token balance</small></article>
+        <article><span>Ownership</span><strong id="metric-ownership">—</strong><small>Published supply</small></article>
+        <article><span>Eligibility</span><strong id="metric-eligibility">—</strong><small>1% threshold</small></article>
+        <article><span>Total SOL paid</span><strong id="metric-sol">—</strong><small>Confirmed distributions</small></article>
+        <article><span>Total Robux paid</span><strong id="metric-robux">—</strong><small>Recorded distributions</small></article>
+      </div>
+
+      <div class="dashboard-split">
+        <section class="dash-section">
+          <span class="section-label">PAYOUT METHOD</span>
+          <h2>Distribution preference</h2>
+          <p>Choose how eligible distributions should be processed for this holder account.</p>
+          <div class="preference-row">
+            <button type="button" data-payout-preference="sol"><span>Solana</span><small>Direct to connected wallet</small><i></i></button>
+            <button type="button" data-payout-preference="robux"><span>Robux</span><small>Requires verified Roblox account</small><i></i></button>
+          </div>
+        </section>
+
+        <section class="dash-section">
+          <span class="section-label">ROBLOX ACCOUNT</span>
+          <h2>Holder identity</h2>
+          <p>Linking is stored against this authenticated wallet.</p>
+          <div class="roblox-status" id="roblox-status">
+            <strong>No Roblox account linked</strong>
+            <span>Robux payouts require a verified account in the CLOUT group.</span>
+          </div>
+        </section>
+      </div>
+
+      <section class="dash-section payout-history-section">
+        <span class="section-label">PAYOUT HISTORY</span>
+        <h2>Confirmed distributions</h2>
+        <div id="payout-history" class="history-table"><div class="empty-row">No confirmed payouts recorded yet.</div></div>
+      </section>
+    </div>
+  </section>
+
+  <div class="update-modal-wrap" id="update-modal" hidden>
+    <button class="modal-dismiss" id="modal-dismiss" aria-label="Close update"></button>
+    <article class="update-modal-card">
+      <button type="button" class="modal-x" id="modal-x">×</button>
+      <span class="section-label" id="modal-category">UPDATE</span>
+      <h2 id="modal-title"></h2>
+      <time id="modal-date"></time>
+      <div id="modal-detail"></div>
+    </article>
+  </div>
+</body>
+</html>
