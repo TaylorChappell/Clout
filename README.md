@@ -13,7 +13,19 @@ npm run dev
 
 The production Railway API is used by default. To use another backend, copy `.env.example` to `.env.local` and change `VITE_BACKEND_API_URL`.
 
-Create a free Reown project ID and set `VITE_WALLETCONNECT_PROJECT_ID` to enable Robinhood Wallet from a standard desktop or mobile browser. For the prebuilt direct-upload site, paste the same value into `config.js` instead. Robinhood Wallet can still connect without it when the site is opened inside a compatible wallet browser.
+### WalletConnect project ID
+
+`WALLETCONNECT_PROJECT_ID` is a frontend GitHub repository variable. It does not belong on Railway.
+
+1. Create a project at [Reown Cloud](https://cloud.reown.com).
+2. Copy its Project ID.
+3. In GitHub, open **Settings > Secrets and variables > Actions > Variables**.
+4. Create a repository variable named `WALLETCONNECT_PROJECT_ID` and paste the Project ID as its value.
+5. Add the GitHub Pages origin and any custom domain to the project allowlist in Reown Cloud.
+
+The included GitHub Actions workflow exposes that value to Vite as `VITE_WALLETCONNECT_PROJECT_ID`. This Project ID is a public frontend identifier, not a private key.
+
+For the prebuilt direct-upload site, edit `config.js` and place the same value in `walletConnectProjectId` instead.
 
 ## Deploy to GitHub Pages
 
@@ -36,7 +48,18 @@ FRONTEND_ORIGIN=https://YOUR_GITHUB_USERNAME.github.io
 
 For a custom domain, use that domain instead. The Ethereum backend can accept comma-separated origins when both the existing site and GitHub Pages must remain active.
 
-The Railway backend must be the Ethereum holder-auth release and must define `ETHEREUM_RPC_URL` and `CLOUT_TOKEN_ADDRESS`. The old Solana payout executor is not used by this frontend.
+### Ethereum RPC URL
+
+`ETHEREUM_RPC_URL` is a Railway backend variable. It does not belong in the frontend repository.
+
+1. Create an Ethereum Mainnet HTTPS endpoint with Alchemy, Infura, QuickNode or another production RPC provider.
+2. In Railway, open the backend service and select **Variables**.
+3. Add `ETHEREUM_RPC_URL` with the complete HTTPS endpoint as its value.
+4. Redeploy the backend service.
+
+Do not use a WebSocket URL. Keep provider keys contained in the Railway variable and never commit them to GitHub.
+
+The Railway backend must also define `CLOUT_TOKEN_ADDRESS` after the official token contract is deployed. The old Solana payout executor is not used by this frontend.
 
 ## Commands
 

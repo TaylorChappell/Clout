@@ -24,7 +24,7 @@ type ExternalLinkKey = "robloxGame" | "robloxGroup" | "twitter" | "coin";
 const links: Record<ExternalLinkKey, string> = {
   robloxGame: "https://www.roblox.com/games/99235859633016/CLOUT-Trading-Simulator",
   robloxGroup: "https://www.roblox.com/communities/386748770/CLOUT-Crypto-Trading-Simulator#!/about",
-  twitter: "",
+  twitter: "https://x.com/CLOUT_robinhood",
   coin: "",
 };
 const PUBLIC_BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -596,7 +596,6 @@ export default function Home() {
           <div className="hero-particles"><i /><i /><i /><i /><i /><i /><i /></div>
         </div>
         <div className="hero-copy">
-          <span className="hero-eyebrow"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /> CLOUT is coming to Robinhood</span>
           <h1>Play the market.<br /><em>Earn your CLOUT.</em></h1>
           <p className="hero-lede">CLOUT Studios develops market-driven Roblox experiences and publishes the performance behind them, covering revenue, operating costs, buybacks and holder distributions.</p>
           <div className="hero-actions">
@@ -608,7 +607,7 @@ export default function Home() {
 
       <section className="portfolio-section section-shell" id="games">
         <div className="section-heading reveal">
-          <div><span className="section-kicker">Game Shares</span><h2>Games built like <em>living markets.</em></h2><p>Follow the studio products, their economies and the performance they contribute to CLOUT.</p></div>
+          <div><h2>Games built like <em>living markets.</em></h2><p>Follow the studio products, their economies and the performance they contribute to CLOUT.</p></div>
           <button className="link-button" type="button" onClick={() => openLink("robloxGroup")}>Visit our Roblox group <ArrowUpRight /></button>
         </div>
 
@@ -618,7 +617,7 @@ export default function Home() {
               <img className="game-cover-image" src={publicPath("/clout-game-cover.png")} alt="CLOUT Roblox game icon" />
             </a>
             <div className="game-content">
-              <div className="game-topline"><span className="status-dot"><i /> Launched</span></div>
+              <div className="game-topline"><span className="status-dot"><i /> Launched</span><span className="game-visits">150K+ visits</span></div>
               <h3>CLOUT</h3>
               <p>Robinhood&apos;s first play-to-earn game and Roblox&apos;s first and most realistic memecoin simulator. Trade, level up and turn your in-game CLOUT into real CLOUT rewards.</p>
               <div className="game-tags"><span>Robinhood</span><span>Play to earn</span><span>Memecoin simulator</span></div>
@@ -643,8 +642,7 @@ export default function Home() {
       <section className="earn-section" id="play-to-earn">
         <div className="section-shell">
           <div className="section-heading earn-heading reveal">
-            <div><span className="section-kicker">Play to Earn</span><h2>Play. Trade. Level up.<br /><em>Earn CLOUT.</em></h2><p>Your in-game progress becomes a route toward CLOUT rewards. Skill, activity and progression drive the experience.</p></div>
-            <span className="platform-badge"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /> Built for Robinhood</span>
+            <div><h2>Play. Trade. Level up.<br /><em>Earn CLOUT.</em></h2><p>Your in-game progress becomes a route toward CLOUT rewards. Skill, activity and progression drive the experience.</p></div>
           </div>
           <div className="earn-flow reveal" aria-label="Play to earn progression">
             {[
@@ -783,13 +781,12 @@ export default function Home() {
               <p>Choose Robinhood Wallet or MetaMask. You will sign a free message to prove ownership. No transaction or spending approval is requested.</p>
               <div className="wallet-provider-list">
                 <button type="button" disabled={walletLoading} onClick={() => connectWallet("metamask")}>
-                  <span className="provider-mark metamask-mark">M</span><div><strong>MetaMask</strong><small>Browser extension or mobile wallet</small></div><ArrowRight />
+                  <span className="provider-mark metamask-mark"><img src={publicPath("/metamask.png")} alt="" aria-hidden="true" /></span><div><strong>MetaMask</strong><small>Browser extension or mobile wallet</small></div><ArrowRight />
                 </button>
                 <button type="button" disabled={walletLoading} onClick={() => connectWallet("robinhood")}>
                   <span className="provider-mark robinhood-mark"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /></span><div><strong>Robinhood Wallet</strong><small>In-app browser or WalletConnect</small></div><ArrowRight />
                 </button>
               </div>
-              <div className="wallet-connect-safety"><LockMark /><span><strong>Non-custodial sign-in</strong><small>Your keys stay inside your wallet.</small></span></div>
             </div>
           </section>
         </div>
