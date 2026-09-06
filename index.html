@@ -2,278 +2,190 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#060a12" />
-  <meta name="description" content="CLOUT Studios. Market-driven games. One transparent studio." />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070b13" />
+  <meta name="description" content="CLOUT Studios — markets you can play, a studio you can measure." />
   <title>CLOUT Studios</title>
-  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="icon" href="./assets/clout.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css" />
+  <script src="./config.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
-  <div class="page-shell" id="public-site">
-    <header class="topbar">
-      <a class="wordmark" href="#top" aria-label="CLOUT Studios home">
-        <span class="clout-mark">C</span>
-        <span>CLOUT</span>
-      </a>
-      <nav class="topnav" aria-label="Primary navigation">
-        <a href="#games">Our Games</a>
-        <a href="#updates">Updates</a>
-        <a href="#statements">Weekly Statements</a>
-        <a href="#holders">Holders</a>
-      </nav>
-      <div class="top-actions" id="header-auth">
-        <button class="btn btn-solid" id="connect-wallet-top" type="button"><span class="mini-mark">C</span> Connect Wallet</button>
+  <main>
+    <section class="hero section-dark" id="top">
+      <div class="hero-gradient hero-gradient-a"></div>
+      <div class="hero-gradient hero-gradient-b"></div>
+      <div class="hero-line"></div>
+      <span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><span class="spark s4"></span><span class="spark s5"></span>
+      <div class="hero-inner reveal">
+        <h1>Markets you can play.<br><span>A studio you can measure.</span></h1>
+        <p>CLOUT Studios develops market-driven Roblox experiences and publishes the performance behind them, covering revenue, operating costs, buybacks and holder distributions.</p>
+        <a class="micro-button" href="#games">Explore our games</a>
       </div>
-    </header>
+    </section>
 
-    <div id="global-notice" class="notice-wrap" hidden></div>
-
-    <main>
-      <section class="hero" id="top">
-        <div class="hero-atmosphere" aria-hidden="true"></div>
-        <div class="hero-gridlines" aria-hidden="true"></div>
-        <div class="hero-copy reveal">
-          <span class="section-label">CLOUT STUDIOS</span>
-          <h1>Market-driven games.<br><span>One transparent studio.</span></h1>
-          <p>We build Roblox games around markets, progression and competition, then publish the numbers behind the studio.</p>
-          <div class="hero-actions">
-            <a class="btn btn-solid btn-wide" href="#games">Our Games <span>↗</span></a>
-            <button class="btn btn-line btn-wide wallet-action" type="button">Connect Wallet</button>
-          </div>
+    <section class="products section-dark" id="games">
+      <div class="content reveal">
+        <div class="section-title-row">
+          <h2>Products people want to <span>play.</span></h2>
+          <a href="#games" class="tiny-link">Visit our Roblox group ↗</a>
         </div>
-        <div class="hero-visual reveal" aria-hidden="true">
-          <div class="hero-ring ring-one"></div>
-          <div class="hero-ring ring-two"></div>
-          <div class="hero-core">
-            <div class="core-glow"></div>
-            <span>C</span>
-          </div>
-          <div class="hero-tick tick-a">ROBLOX</div>
-          <div class="hero-tick tick-b">SOLANA</div>
-          <div class="hero-tick tick-c">STUDIO</div>
-        </div>
-        <div class="hero-bottom">
-          <span>Games first</span>
-          <span>Revenue reported weekly</span>
-          <span>Holder distributions tracked</span>
-        </div>
-      </section>
-
-      <section class="editorial-section games-section" id="games">
-        <div class="section-intro reveal">
-          <span class="section-label">OUR GAMES</span>
-          <h2>Built to be played.<br>Built to keep moving.</h2>
-          <p>Each title has its own economy, progression and identity. Studio reporting sits above the games, not inside them.</p>
-        </div>
-
-        <div class="games-layout reveal">
-          <article class="game-tile game-clout">
-            <div class="game-art">
-              <div class="game-grid"></div>
-              <div class="game-mark">C</div>
-              <div class="market-lines"><i></i><i></i><i></i><i></i><i></i></div>
-              <span class="game-status">LIVE</span>
-            </div>
-            <div class="game-info">
-              <div>
-                <span class="tiny-label">ROBLOX</span>
-                <h3>CLOUT</h3>
-              </div>
-              <p>A market simulator built around trading, competition and portfolio progression.</p>
-              <a class="arrow-link" id="clout-game-link" href="#" target="_blank" rel="noreferrer">Open game <span>↗</span></a>
+        <div class="product-grid">
+          <article class="product-card">
+            <div class="product-art clout-art"><img src="./assets/clout-game.png" alt="CLOUT game artwork"></div>
+            <div class="product-content">
+              <div class="product-meta"><span></span><small>Live now</small></div>
+              <h3>CLOUT</h3>
+              <p>A social memecoin market simulator built for the Roblox. Trade in a Roblox economy or use your real CLOUT in gameplay across the market.</p>
+              <div class="tag-row"><span>Player trading</span><span>Game shares</span><span>Play to earn</span></div>
+              <div class="card-footer"><small>Since 2025</small><span>↗</span></div>
             </div>
           </article>
-
-          <article class="game-tile game-paper">
-            <div class="game-art">
-              <div class="paper-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-              <strong>PAPER<br>TRADE</strong>
-              <span class="game-status game-status-muted">COMING SOON</span>
-            </div>
-            <div class="game-info">
-              <div>
-                <span class="tiny-label">ROBLOX</span>
-                <h3>Paper Trade</h3>
-              </div>
-              <p>Paper trading for prediction markets and stocks, built as a competitive Roblox experience.</p>
-              <span class="arrow-link disabled-link">In development</span>
+          <article class="product-card">
+            <div class="product-art paper-art"><div class="paper-frame"></div><span>Coming soon</span></div>
+            <div class="product-content">
+              <div class="product-meta"><span></span><small>In development</small></div>
+              <h3>Paper Trade</h3>
+              <p>Built to be lighter than real markets without losing what matters. Build a paper portfolio across stocks and prediction markets inside Roblox.</p>
+              <div class="tag-row"><span>Paper trading</span><span>Stocks</span><span>Prediction markets</span></div>
+              <div class="card-footer"><small>&nbsp;</small><span></span></div>
             </div>
           </article>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="editorial-section updates-section" id="updates">
-        <div class="section-intro horizontal reveal">
+    <section class="performance" id="performance">
+      <div class="content reveal">
+        <div class="performance-head">
           <div>
-            <span class="section-label">UPDATES</span>
-            <h2>What changed.</h2>
+            <h2>Weekly revenue and <span>studio<br>performance.</span></h2>
+            <p>Revenue, operating costs and holder distributions are published weekly so studio performance can be measured over time.</p>
           </div>
-          <p>Build notes, releases and studio changes, newest first.</p>
         </div>
-        <div class="updates-layout" id="updates-grid">
-          <div class="section-loading">Loading published updates</div>
-        </div>
-      </section>
-
-      <section class="editorial-section statements-section" id="statements">
-        <div class="section-intro horizontal reveal">
+        <div class="statement-toolbar">
           <div>
-            <span class="section-label">WEEKLY STATEMENTS</span>
-            <h2>The studio, in numbers.</h2>
+            <b id="statementPeriod">Current reporting period</b>
+            <small id="statementDates">Latest published week</small>
           </div>
-          <div class="currency-switch" aria-label="Statement currency">
-            <button type="button" data-currency="usd" class="active">USD</button>
-            <button type="button" data-currency="sol">SOL</button>
-            <button type="button" data-currency="robux">ROBUX</button>
+          <div class="currency-toggle" aria-label="Currency">
+            <button class="active" data-currency="USD">USD</button>
+            <button data-currency="ETH">ETH</button>
+            <button data-currency="ROBUX">R$</button>
           </div>
         </div>
-        <div id="statement-container" class="statement-frame">
-          <div class="section-loading">Loading weekly statements</div>
+        <div class="performance-layout">
+          <div class="metric-side">
+            <div class="metrics-row">
+              <div><small>Game revenue</small><strong data-money="912">$912</strong></div>
+              <div><small>Studio revenue</small><strong data-money="5325">$5,325</strong></div>
+              <div><small>Holder distributions</small><strong data-money="133">$133</strong></div>
+            </div>
+            <div class="monthly-head"><b>Monthly performance</b><span><em>NET</em> +8.7%</span></div>
+            <div class="chart-grid">
+              <div class="bar-wrap"><span>$5.3K</span><div class="bar" style="--h:76%"></div><small>Aug 2026</small></div>
+              <div class="bar-wrap"><span>$4.6K</span><div class="bar" style="--h:64%"></div><small>Jul 2026</small></div>
+            </div>
+          </div>
+          <aside class="statement-panel">
+            <div class="statement-title"><strong>Total August 2026</strong><small>Monthly studio ledger</small></div>
+            <div class="ledger-row"><span>Game revenue</span><b data-money="912">$912</b></div>
+            <div class="ledger-row"><span>Coin revenue</span><b data-money="4113">$4,113</b></div>
+            <div class="ledger-row"><span>Advertising</span><b data-money="100">$100</b></div>
+            <div class="ledger-row"><span>Development & reserves</span><b data-money="66">$66</b></div>
+            <div class="ledger-row"><span>Holder distributions</span><b data-money="133">$133</b></div>
+            <div class="ledger-total"><span>Studio revenue</span><strong data-money="5325">$5,325</strong></div>
+          </aside>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="holder-zone" id="holders">
-        <div class="qualify-panel reveal">
-          <div class="qualify-number-block">
-            <div class="yellow-haze"></div>
-            <div class="one-percent">1<span>%</span></div>
+    <section class="earn-section" id="earn">
+      <div class="content reveal">
+        <div class="earn-heading"><small>PLAY TO EARN</small><h2>Your in-game CLOUT can become <span>real CLOUT.</span></h2><p>Play, trade and level up inside CLOUT. Eligible gameplay rewards can be converted into the on-chain CLOUT token on Ethereum.</p></div>
+        <div class="earn-steps">
+          <div><em>01</em><b>Play</b><small>Compete in CLOUT and participate in the market.</small></div>
+          <div><em>02</em><b>Trade</b><small>Build your in-game portfolio and activity.</small></div>
+          <div><em>03</em><b>Level up</b><small>Progress through the game and unlock rewards.</small></div>
+          <div><em>04</em><b>Earn CLOUT</b><small>Claim eligible rewards as ERC-20 CLOUT on Ethereum.</small></div>
+        </div>
+        <div class="earn-note"><span>Ethereum</span><p>On-chain rewards are separate from the in-game economy until a claim is completed.</p></div>
+      </div>
+    </section>
+
+    <section class="holders" id="holders">
+      <div class="content">
+        <div class="holder-nav reveal">
+          <a class="brand" href="#top"><img src="./assets/clout.svg" alt=""><b>CLOUT<br><small>STUDIOS</small></b></a>
+          <nav><a href="#games">Our games</a><a href="#performance">Reporting</a><a href="#holders">Holders</a><a href="#updates">Updates</a></nav>
+          <button class="wallet-button" id="connectWallet">Connect wallet</button>
+        </div>
+        <div class="holder-heading reveal"><h2><span>holders.</span></h2><p>Qualify at the studio level and track your position across the published distribution process.</p></div>
+
+        <div class="qualification reveal">
+          <div class="qualification-visual">
+            <div class="qual-glow"></div>
+            <div class="percent">1<sup>%</sup></div>
             <strong>Minimum eligible ownership</strong>
-            <small>Recorded at the weekly distribution snapshot</small>
-            <div class="qualify-scale"><i></i></div>
+            <small>Measured at the weekly distribution snapshot</small>
           </div>
-          <div class="qualify-copy">
-            <h2>Hold 1% or more to<br>qualify.</h2>
+          <div class="qualification-copy">
+            <h3>Hold 1% or more to<br>qualify.</h3>
             <p>Wallets holding at least 1% of the published CLOUT supply at a distribution snapshot qualify for that reporting period.</p>
-            <div class="qualify-facts">
-              <div><strong>Snapshot qualified</strong><span>Balance recorded when the period closes</span></div>
-              <div><strong>Holder selected</strong><span>Receive an approved payout in SOL or Robux</span></div>
-            </div>
-            <button class="holder-cta wallet-action" type="button">Check my position <span>↗</span></button>
+            <button class="check-position" id="checkPosition">Check my position <span>↗</span></button>
           </div>
         </div>
 
-        <div class="payout-path reveal">
-          <div class="path-title">
-            <h3>From play to<br>payout.</h3>
-            <p>Every distribution follows the same reported path.</p>
-          </div>
-          <div class="path-track">
-            <article><span>01</span><i></i><strong>Games generate revenue</strong><p>CLOUT, Paper Trade and future releases</p></article>
-            <article><span>02</span><i></i><strong>Operations are reported</strong><p>Costs, development and reserves</p></article>
-            <article><span>03</span><i></i><strong>The approved pool closes</strong><p>A frozen public statement for the period</p></article>
-            <article><span>04</span><i></i><strong>Eligible holders are paid</strong><p>SOL or Robux, based on holder preference</p></article>
-          </div>
+        <div class="payout-flow reveal">
+          <div class="flow-intro"><h3>From play to<br>payout.</h3><p>Every distribution follows the same reported path.</p></div>
+          <div class="flow-step"><em>01</em><i></i><b>Games generate revenue</b><small>CLOUT, Paper Trade and future releases</small></div>
+          <div class="flow-step"><em>02</em><i></i><b>Operations are reported</b><small>Costs, development and reserves</small></div>
+          <div class="flow-step"><em>03</em><i></i><b>The approved pool closes</b><small>A frozen public statement for the period</small></div>
+          <div class="flow-step"><em>04</em><i></i><b>Eligible holders are paid</b><small>CLOUT or Robux based on holder preference</small></div>
         </div>
 
-        <div class="payment-choice reveal">
-          <div class="payment-heading">
-            <h3>Choose how you're paid.</h3>
-            <p>Robux requires a linked Roblox username and CLOUT group membership.</p>
-          </div>
-          <div class="payment-grid">
-            <article>
-              <div class="solana-logo" aria-hidden="true"><i></i><i></i><i></i></div>
-              <div><strong>Solana</strong><span>Sent directly to the connected wallet</span></div>
-              <small>On-chain</small>
-            </article>
-            <article>
-              <div class="roblox-logo" aria-hidden="true"><span></span></div>
-              <div><strong>Robux</strong><span>Sent after Roblox account verification</span></div>
-              <small class="yellow-text">+20% value</small>
-            </article>
-          </div>
+        <div class="paid-heading reveal"><h3>Choose how you're paid.</h3><small>Robux requires a linked Roblox account and CLOUT group membership.</small></div>
+        <div class="payout-options reveal">
+          <button class="payout-option active" data-pref="clout"><span class="token-glyph">C</span><div><b>CLOUT</b><small>Sent on-chain to the connected Ethereum wallet</small></div><em>ERC-20</em></button>
+          <button class="payout-option" data-pref="robux"><span class="robux-glyph">◇</span><div><b>Robux</b><small>Sent after Roblox account verification</small></div><em>+20% value</em></button>
         </div>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-main">
-        <a class="wordmark" href="#top"><span class="clout-mark">C</span><span>CLOUT</span></a>
-        <p>Market-driven games. One transparent studio.</p>
       </div>
-      <div class="footer-links">
-        <a href="#games">Our Games</a>
-        <a href="#updates">Updates</a>
-        <a href="#statements">Statements</a>
-        <a href="./terms.html">Terms</a>
-        <a href="./privacy.html">Privacy</a>
+    </section>
+
+    <section class="updates section-dark" id="updates">
+      <div class="content reveal">
+        <h2>Updates.</h2>
+        <p>The latest published progress across CLOUT, Paper Trade and the studio.</p>
+        <div class="rule"></div>
+        <div id="updatesGrid" class="updates-empty">
+          <h3>No studio updates have been published.</h3>
+          <small>Official releases will appear here as they are published.</small>
+        </div>
       </div>
-      <span class="footer-copy">© 2026 CLOUT Studios</span>
+    </section>
+
+    <footer>
+      <div class="content footer-inner">
+        <a class="brand" href="#top"><img src="./assets/clout.svg" alt=""><b>CLOUT<br><small>STUDIOS</small></b></a>
+        <p>Markets you can play. A studio you can measure.</p>
+        <div class="rh-mark"><span class="rh-icon">R</span><div><b>Robinhood Wallet</b><small>Ethereum compatible</small></div></div>
+      </div>
+      <div class="content footer-bottom"><span>© 2026 CLOUT Studios</span><span>Terms · Privacy</span><span>Independent project</span></div>
     </footer>
-  </div>
+  </main>
 
-  <section class="dashboard" id="holder-dashboard" hidden>
-    <header class="topbar dashboard-topbar">
-      <a class="wordmark" href="#top" id="dashboard-home"><span class="clout-mark">C</span><span>CLOUT</span></a>
-      <div class="top-actions">
-        <button class="btn btn-line" id="dashboard-back" type="button">Back</button>
-        <button class="btn btn-line" id="holder-logout" type="button">Log out</button>
-      </div>
-    </header>
-
-    <div class="dashboard-body">
-      <div id="dashboard-notice" class="dashboard-notice" hidden></div>
-      <div class="dashboard-heading">
-        <div>
-          <span class="section-label">HOLDER DASHBOARD</span>
-          <h1>My CLOUT</h1>
-          <span class="wallet-display" id="dashboard-wallet">—</span>
-        </div>
-        <button class="btn btn-line" id="dashboard-refresh" type="button">Refresh ↻</button>
-      </div>
-
-      <div class="dashboard-stats">
-        <article class="stat-main"><span>CLOUT held</span><strong id="metric-balance">—</strong><small>Live token balance</small></article>
-        <article><span>Ownership</span><strong id="metric-ownership">—</strong><small>Published supply</small></article>
-        <article><span>Eligibility</span><strong id="metric-eligibility">—</strong><small>1% threshold</small></article>
-        <article><span>Total SOL paid</span><strong id="metric-sol">—</strong><small>Confirmed distributions</small></article>
-        <article><span>Total Robux paid</span><strong id="metric-robux">—</strong><small>Recorded distributions</small></article>
-      </div>
-
-      <div class="dashboard-split">
-        <section class="dash-section">
-          <span class="section-label">PAYOUT METHOD</span>
-          <h2>Distribution preference</h2>
-          <p>Choose how eligible distributions should be processed for this holder account.</p>
-          <div class="preference-row">
-            <button type="button" data-payout-preference="sol"><span>Solana</span><small>Direct to connected wallet</small><i></i></button>
-            <button type="button" data-payout-preference="robux"><span>Robux</span><small>Requires verified Roblox account</small><i></i></button>
-          </div>
-        </section>
-
-        <section class="dash-section">
-          <span class="section-label">ROBLOX ACCOUNT</span>
-          <h2>Holder identity</h2>
-          <p>Linking is stored against this authenticated wallet.</p>
-          <div class="roblox-status" id="roblox-status">
-            <strong>No Roblox account linked</strong>
-            <span>Robux payouts require a verified account in the CLOUT group.</span>
-          </div>
-        </section>
-      </div>
-
-      <section class="dash-section payout-history-section">
-        <span class="section-label">PAYOUT HISTORY</span>
-        <h2>Confirmed distributions</h2>
-        <div id="payout-history" class="history-table"><div class="empty-row">No confirmed payouts recorded yet.</div></div>
-      </section>
+  <div class="modal" id="walletModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close></div>
+    <div class="wallet-modal">
+      <button class="modal-close" data-close>×</button>
+      <small>CONNECT WALLET</small>
+      <h3>Choose an Ethereum wallet.</h3>
+      <p>Connect to prove ownership and access your holder position.</p>
+      <button class="wallet-choice" id="metaMaskChoice"><span class="fox">M</span><div><b>MetaMask</b><small>Connect through the browser extension</small></div><em>→</em></button>
+      <button class="wallet-choice" id="robinhoodChoice"><span class="rh-icon">R</span><div><b>Robinhood Wallet</b><small>Injected provider or WalletConnect</small></div><em>→</em></button>
+      <div class="wallet-status" id="walletStatus"></div>
     </div>
-  </section>
-
-  <div class="update-modal-wrap" id="update-modal" hidden>
-    <button class="modal-dismiss" id="modal-dismiss" aria-label="Close update"></button>
-    <article class="update-modal-card">
-      <button type="button" class="modal-x" id="modal-x">×</button>
-      <span class="section-label" id="modal-category">UPDATE</span>
-      <h2 id="modal-title"></h2>
-      <time id="modal-date"></time>
-      <div id="modal-detail"></div>
-    </article>
   </div>
 </body>
 </html>
