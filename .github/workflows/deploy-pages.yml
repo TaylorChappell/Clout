@@ -39,6 +39,7 @@ jobs:
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
           VITE_BACKEND_API_URL: https://cloutstudiosserver-production.up.railway.app
+          VITE_WALLETCONNECT_PROJECT_ID: ${{ vars.WALLETCONNECT_PROJECT_ID }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

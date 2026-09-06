@@ -4,12 +4,12 @@ const sections = [
   {
     id: "scope",
     title: "Scope",
-    content: <><p>This policy explains how CLOUT Studios handles information when you visit the website, connect a wallet, link a Roblox account or use holder tools.</p><p>Third-party services such as Roblox, Phantom and Solana operate under their own privacy policies. This policy does not control how those providers process information.</p></>,
+    content: <><p>This policy explains how CLOUT Studios handles information when you visit the website, connect a wallet, link a Roblox account or use holder tools.</p><p>Third-party services such as Roblox, MetaMask, Robinhood Wallet and Ethereum operate under their own privacy policies. This policy does not control how those providers process information.</p></>,
   },
   {
     id: "information-collected",
     title: "Information we collect",
-    content: <><p>We may process a public Solana wallet address, signed wallet-authentication messages, a Roblox username, account-verification results, payout preferences and records needed to calculate or confirm holder eligibility.</p><p>We may also receive basic technical information such as browser type, device type, approximate region, page activity, error logs, security events and referral information when analytics or security systems are enabled.</p></>,
+    content: <><p>We may process a public Ethereum wallet address, signed wallet-authentication messages, a Roblox username, account-verification results, payout preferences and records needed to calculate or confirm holder eligibility.</p><p>We may also receive basic technical information such as browser type, device type, approximate region, page activity, error logs, security events and referral information when analytics or security systems are enabled.</p></>,
   },
   {
     id: "never-collected",

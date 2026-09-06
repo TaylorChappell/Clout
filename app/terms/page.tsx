@@ -34,7 +34,7 @@ const sections = [
   {
     id: "third-parties",
     title: "Third-party services",
-    content: <><p>The website links to services operated by Roblox, Phantom, Solana and other providers. Their own terms, availability and privacy practices apply. CLOUT Studios does not control those services and is not responsible for their outages, policy changes or actions.</p><p>CLOUT Studios is independent and is not endorsed by or affiliated with Roblox Corporation, Solana Foundation or Phantom unless explicitly stated.</p></>,
+    content: <><p>The website links to services operated by Roblox, MetaMask, Robinhood Wallet, Ethereum and other providers. Their own terms, availability and privacy practices apply. CLOUT Studios does not control those services and is not responsible for their outages, policy changes or actions.</p><p>CLOUT Studios is independent and is not endorsed by or affiliated with Roblox Corporation, Consensys, Robinhood Markets, Inc. or the Ethereum Foundation unless explicitly stated.</p></>,
   },
   {
     id: "ownership",

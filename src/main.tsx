@@ -7,10 +7,10 @@ import TermsPage from "../app/terms/page";
 import "../app/globals.css";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-const pathname = window.location.pathname.replace(basePath, "").replace(/\/+$/, "") || "/";
+const pathname = window.CLOUT_ROUTE || window.location.pathname.replace(basePath, "").replace(/\/+$/, "") || "/";
 
 const routes: Record<string, { title: string; component: ReactNode }> = {
-  "/": { title: "CLOUT Studios | Market-Driven Games", component: <Home /> },
+  "/": { title: "CLOUT Studios | Play, Trade, Earn CLOUT", component: <Home /> },
   "/admin": { title: "Studio Control | CLOUT Studios", component: <AdminPage /> },
   "/privacy": { title: "Privacy Policy | CLOUT Studios", component: <PrivacyPage /> },
   "/terms": { title: "Terms of Use | CLOUT Studios", component: <TermsPage /> },

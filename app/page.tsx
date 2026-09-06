@@ -2,18 +2,20 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
-type PhantomProvider = {
-  isPhantom?: boolean;
-  publicKey?: { toString: () => string };
-  connect: (options?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: { toString: () => string } }>;
+type EthereumProvider = {
+  isMetaMask?: boolean;
+  isRobinhood?: boolean;
+  providers?: EthereumProvider[];
+  request: (request: { method: string; params?: unknown[] }) => Promise<unknown>;
   disconnect?: () => Promise<void>;
-  signMessage?: (message: Uint8Array, encoding: "utf8") => Promise<{ signature: Uint8Array }>;
+  on?: (event: string, listener: (...args: unknown[]) => void) => void;
 };
 
 declare global {
   interface Window {
-    solana?: PhantomProvider;
-    phantom?: { solana?: PhantomProvider };
+    ethereum?: EthereumProvider;
+    CLOUT_CONFIG?: { walletConnectProjectId?: string };
+    CLOUT_ROUTE?: string;
   }
 }
 
@@ -28,20 +30,22 @@ const links: Record<ExternalLinkKey, string> = {
 const PUBLIC_BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
 const publicPath = (path: string) => `${PUBLIC_BASE_PATH}${path.startsWith("/") ? path : `/${path}`}`;
 const BACKEND_API_URL = (import.meta.env.VITE_BACKEND_API_URL || "https://cloutstudiosserver-production.up.railway.app").replace(/\/$/, "");
-const SOL_USD_TICKER_URL = "https://api.kraken.com/0/public/Ticker?pair=SOLUSD";
+const ETH_USD_TICKER_URL = "https://api.kraken.com/0/public/Ticker?pair=ETHUSD";
 const ROBUX_USD_RATE = 0.0038;
+const ETH_CHAIN_ID = "0x1";
+const WALLETCONNECT_PROJECT_ID = window.CLOUT_CONFIG?.walletConnectProjectId || import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "";
 
-type ReportingCurrency = "usd" | "sol" | "robux";
+type ReportingCurrency = "usd" | "eth" | "robux";
 
 type WeeklyStatement = {
   period: string;
   published: string;
   gameRevenueRobux: number;
-  coinRevenueSol: number;
+  coinRevenueEth: number;
   advertisingRobux: number;
   maintenanceRobux: number;
-  distributionsSol: number;
-  buybacksSol: number;
+  distributionsEth: number;
+  buybacksEth: number;
 };
 
 type StudioUpdate = {
@@ -54,21 +58,59 @@ type StudioUpdate = {
 };
 
 type HolderDashboard = {
+  network: "ethereum";
+  chainId: string;
   walletAddress: string;
-  tokenMint: string | null;
-  token: null | { amountRaw: string; amount: string; decimals: number; supplyRaw: string; ownershipPercent: number };
-  tokenError: string | null;
-  eligible: boolean;
-  thresholdPercent: number;
-  payoutMethod: "solana" | "robux";
-  paid: { sol: number; robux: number };
-  roblox: null | { userId: number; username: string; displayName: string; avatarUrl: string | null; groupMember: boolean; verifiedAt: string };
-  payoutHistory: Array<{ method: "solana" | "robux"; sol: number | null; robux: number | null; proof: string | null; signature: string | null; paidAt: string | null }>;
+  sessionExpiresAt?: string;
+  profile: {
+    payoutPreference: "clout" | "robux";
+    robloxUserId: string | null;
+    robloxUsername: string | null;
+    robloxDisplayName?: string | null;
+    robloxAvatarUrl?: string | null;
+    robloxGroupMember: boolean | null;
+    robloxVerifiedAt: string | null;
+  };
+  holdings: {
+    tokenAddress: string | null;
+    balance: number;
+    amountRaw: string;
+    decimals: number;
+    ownershipPercent: number;
+    eligible: boolean;
+    error: string | null;
+  };
+  payouts: {
+    totalClout: number;
+    totalRobux: number;
+    payoutCount: number;
+    history: Array<{ payoutId: string; asset: "clout" | "robux"; amount: number; amountClout?: number; txHash: string | null; completedAt: string | null; createdAt: string }>;
+  };
 };
 
 type HolderApiError = Error & { code?: string; joinUrl?: string; profile?: { username?: string; displayName?: string; avatarUrl?: string | null } };
 
 const HOLDER_SESSION_KEY = "clout_holder_session";
+
+type StoredHolderSession = { sessionToken: string; walletAddress: string; walletType: "metamask" | "robinhood" };
+
+function readStoredSession(): StoredHolderSession | null {
+  try {
+    const raw = window.localStorage.getItem(HOLDER_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredHolderSession>;
+    if (!parsed.sessionToken || !parsed.walletAddress) return null;
+    return { sessionToken: parsed.sessionToken, walletAddress: parsed.walletAddress, walletType: parsed.walletType === "robinhood" ? "robinhood" : "metamask" };
+  } catch {
+    return null;
+  }
+}
+
+function injectedProviders() {
+  const provider = window.ethereum;
+  if (!provider) return [];
+  return provider.providers?.length ? provider.providers : [provider];
+}
 
 async function holderRequest<T>(path: string, token = "", init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
@@ -86,10 +128,8 @@ async function holderRequest<T>(path: string, token = "", init?: RequestInit): P
   return payload;
 }
 
-function signatureBase64(signature: Uint8Array) {
-  let binary = "";
-  signature.forEach((byte) => { binary += String.fromCharCode(byte); });
-  return window.btoa(binary);
+function textToHex(value: string) {
+  return `0x${Array.from(new TextEncoder().encode(value)).map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function backendAssetUrl(value?: string | null) {
@@ -105,10 +145,10 @@ function backendAssetUrl(value?: string | null) {
 }
 
 const guideSteps = [
-  { icon: "phantom", title: "Install Phantom", copy: "Create a new self-custody Solana wallet or import one you already control." },
-  { icon: "solana", title: "Fund with SOL", copy: "Add enough SOL for the CLOUT purchase and a small Solana network fee." },
+  { icon: "metamask", title: "Choose your wallet", copy: "Connect MetaMask or Robinhood Wallet to Ethereum Mainnet." },
+  { icon: "ethereum", title: "Fund with ETH", copy: "Keep enough ETH for the CLOUT purchase and Ethereum network fees." },
   { icon: "verify", title: "Verify the contract", copy: "Use only the contract shown on this site and the official CLOUT X account." },
-  { icon: "connect", title: "Acquire and connect", copy: "Buy CLOUT through Phantom, then connect that same wallet to view your position." },
+  { icon: "connect", title: "Acquire and connect", copy: "Acquire ERC-20 CLOUT, then connect the same wallet to open your holder dashboard." },
 ] as const;
 
 function ArrowUpRight() {
@@ -131,8 +171,8 @@ function CloutMark() {
   return <span className="clout-mark" aria-hidden="true"><img src={publicPath("/clout-icon.png")} alt="" /></span>;
 }
 
-function AssetMark({ type }: { type: "solana" | "robux" }) {
-  return <span className={`asset-icon ${type}-icon`} aria-hidden="true"><img src={publicPath(type === "solana" ? "/solana-logo.png" : "/robux-logo.png")} alt="" /></span>;
+function AssetMark({ type }: { type: "clout" | "robux" }) {
+  return <span className={`asset-icon ${type}-icon`} aria-hidden="true"><img src={publicPath(type === "clout" ? "/clout-icon.png" : "/robux-logo.png")} alt="" /></span>;
 }
 
 function UpdateVisual({ update, compact = false }: { update: StudioUpdate; compact?: boolean }) {
@@ -140,12 +180,12 @@ function UpdateVisual({ update, compact = false }: { update: StudioUpdate; compa
   return <div className={`update-visual update-${update.category}${compact ? " is-compact" : ""}`} aria-hidden="true"><span className="update-visual-grid" /><img src={publicPath("/clout-icon.png")} alt="" /><div><small>CLOUT STUDIOS</small><strong>{update.category === "paper" ? "PAPER TRADE" : update.category.toUpperCase()}</strong></div></div>;
 }
 
-function StepIcon({ type }: { type: "phantom" | "solana" | "verify" | "connect" }) {
-  if (type === "phantom") {
-    return <img src={publicPath("/phantom-logo.png")} alt="" aria-hidden="true" />;
+function StepIcon({ type }: { type: "metamask" | "ethereum" | "verify" | "connect" }) {
+  if (type === "metamask") {
+    return <span className="wallet-step-glyph">M</span>;
   }
-  if (type === "solana") {
-    return <img src={publicPath("/solana-logo.png")} alt="" aria-hidden="true" />;
+  if (type === "ethereum") {
+    return <span className="wallet-step-glyph">Ξ</span>;
   }
   if (type === "verify") {
     return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8 19 7v5.2c0 4.1-2.8 6.8-7 8-4.2-1.2-7-3.9-7-8V7l7-3.2Z" /><path d="m8.7 12 2 2 4.6-4.5" /></svg>;
@@ -156,15 +196,17 @@ function StepIcon({ type }: { type: "phantom" | "solana" | "verify" | "connect" 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [walletChooserOpen, setWalletChooserOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [walletAddress, setWalletAddress] = useState("");
+  const [walletType, setWalletType] = useState<"metamask" | "robinhood" | null>(null);
   const [walletLoading, setWalletLoading] = useState(false);
   const [holderSessionToken, setHolderSessionToken] = useState("");
   const [holderSessionLoading, setHolderSessionLoading] = useState(true);
   const [holderDashboard, setHolderDashboard] = useState<HolderDashboard | null>(null);
   const [holderDashboardLoading, setHolderDashboardLoading] = useState(false);
   const [dashboardTab, setDashboardTab] = useState<"overview" | "payouts" | "roblox">("overview");
-  const [payoutChoice, setPayoutChoice] = useState<"solana" | "robux">("solana");
+  const [payoutChoice, setPayoutChoice] = useState<"clout" | "robux">("clout");
   const [payoutSaving, setPayoutSaving] = useState(false);
   const [robloxUsername, setRobloxUsername] = useState("");
   const [robloxChecking, setRobloxChecking] = useState(false);
@@ -176,28 +218,28 @@ export default function Home() {
   const [contentError, setContentError] = useState(false);
   const [statementIndex, setStatementIndex] = useState(0);
   const [reportingCurrency, setReportingCurrency] = useState<ReportingCurrency>("usd");
-  const [solUsdRate, setSolUsdRate] = useState<number | null>(null);
+  const [ethUsdRate, setEthUsdRate] = useState<number | null>(null);
   const [updatePage, setUpdatePage] = useState(0);
   const [selectedUpdate, setSelectedUpdate] = useState<StudioUpdate | null>(null);
   const [activeGuideStep, setActiveGuideStep] = useState(0);
   const walletDisplay = walletAddress.length > 16 ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}` : walletAddress;
   const activeStatement = weeklyStatements[statementIndex] ?? null;
   const gameRevenueUsd = activeStatement ? activeStatement.gameRevenueRobux * ROBUX_USD_RATE : null;
-  const coinRevenueUsd = activeStatement && solUsdRate ? activeStatement.coinRevenueSol * solUsdRate : null;
+  const coinRevenueUsd = activeStatement && ethUsdRate ? activeStatement.coinRevenueEth * ethUsdRate : null;
   const advertisingUsd = activeStatement ? activeStatement.advertisingRobux * ROBUX_USD_RATE : null;
   const maintenanceUsd = activeStatement ? activeStatement.maintenanceRobux * ROBUX_USD_RATE : null;
   const operatingCostsUsd = advertisingUsd !== null && maintenanceUsd !== null ? advertisingUsd + maintenanceUsd : null;
-  const distributionsUsd = activeStatement && solUsdRate ? activeStatement.distributionsSol * solUsdRate : null;
-  const buybacksUsd = activeStatement && solUsdRate ? activeStatement.buybacksSol * solUsdRate : null;
+  const distributionsUsd = activeStatement && ethUsdRate ? activeStatement.distributionsEth * ethUsdRate : null;
+  const buybacksUsd = activeStatement && ethUsdRate ? activeStatement.buybacksEth * ethUsdRate : null;
   const netRevenueUsd = gameRevenueUsd !== null && coinRevenueUsd !== null && operatingCostsUsd !== null ? gameRevenueUsd + coinRevenueUsd - operatingCostsUsd : null;
-  const currencyOrder: ReportingCurrency[] = ["usd", "sol", "robux"];
+  const currencyOrder: ReportingCurrency[] = ["usd", "eth", "robux"];
 
   const formatReportingValue = (usdValue: number | null) => {
     if (usdValue === null) return "Rate unavailable";
-    if (reportingCurrency === "sol") {
-      if (!solUsdRate) return "Rate unavailable";
-      const value = usdValue / solUsdRate;
-      return `${value.toLocaleString("en-US", { maximumFractionDigits: value < 100 ? 2 : 1 })} SOL`;
+    if (reportingCurrency === "eth") {
+      if (!ethUsdRate) return "Rate unavailable";
+      const value = usdValue / ethUsdRate;
+      return `${value.toLocaleString("en-US", { maximumFractionDigits: value < 10 ? 4 : 2 })} ETH`;
     }
     if (reportingCurrency === "robux") {
       const value = usdValue / ROBUX_USD_RATE;
@@ -224,13 +266,13 @@ export default function Home() {
   ] : [];
 
   const performanceStatements = financialRange === "monthly" ? weeklyStatements.slice(-4) : weeklyStatements;
-  const performanceValues = solUsdRate ? performanceStatements.map((statement) => (
+  const performanceValues = ethUsdRate ? performanceStatements.map((statement) => (
     statement.gameRevenueRobux * ROBUX_USD_RATE
-    + statement.coinRevenueSol * solUsdRate
+    + statement.coinRevenueEth * ethUsdRate
     - (statement.advertisingRobux + statement.maintenanceRobux) * ROBUX_USD_RATE
   )) : [];
   const performanceMaximum = Math.max(...performanceValues, 1);
-  const performancePoints = solUsdRate ? performanceStatements.map((statement, index) => [
+  const performancePoints = ethUsdRate ? performanceStatements.map((statement, index) => [
     statement.published.replace("Published ", ""),
     performanceValues[index],
     Math.max(20, Math.round((performanceValues[index] / performanceMaximum) * 94)),
@@ -244,8 +286,8 @@ export default function Home() {
   const applyHolderDashboard = useCallback((next: HolderDashboard) => {
     setHolderDashboard(next);
     setWalletAddress(next.walletAddress);
-    setPayoutChoice(next.payoutMethod);
-    if (next.roblox?.username) setRobloxUsername(next.roblox.username);
+    setPayoutChoice(next.profile.payoutPreference);
+    if (next.profile.robloxUsername) setRobloxUsername(next.profile.robloxUsername);
   }, []);
 
   useEffect(() => {
@@ -256,16 +298,18 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    const token = window.localStorage.getItem(HOLDER_SESSION_KEY) || "";
-    if (!token) {
+    const stored = readStoredSession();
+    if (!stored) {
       setHolderSessionLoading(false);
       return;
     }
-    holderRequest<{ dashboard: HolderDashboard }>("/v1/holder/me", token)
-      .then((result) => {
+    holderRequest<{ walletAddress: string }>("/v1/public/holder/session", stored.sessionToken)
+      .then(() => holderRequest<HolderDashboard>("/v1/public/holder/dashboard", stored.sessionToken))
+      .then((dashboard) => {
         if (!active) return;
-        setHolderSessionToken(token);
-        applyHolderDashboard(result.dashboard);
+        setHolderSessionToken(stored.sessionToken);
+        setWalletType(stored.walletType);
+        applyHolderDashboard(dashboard);
       })
       .catch(() => {
         window.localStorage.removeItem(HOLDER_SESSION_KEY);
@@ -277,8 +321,8 @@ export default function Home() {
   useEffect(() => {
     if (!holderSessionToken) return;
     const refresh = () => {
-      holderRequest<{ dashboard: HolderDashboard }>("/v1/holder/me", holderSessionToken)
-        .then((result) => applyHolderDashboard(result.dashboard))
+      holderRequest<HolderDashboard>("/v1/public/holder/dashboard", holderSessionToken)
+        .then((dashboard) => applyHolderDashboard(dashboard))
         .catch((error: HolderApiError) => {
           if (error.code !== "SESSION_EXPIRED") return;
           window.localStorage.removeItem(HOLDER_SESSION_KEY);
@@ -313,36 +357,37 @@ export default function Home() {
 
   useEffect(() => {
     let active = true;
-    const loadSolPrice = async () => {
+    const loadEthPrice = async () => {
       try {
-        const response = await fetch(SOL_USD_TICKER_URL, { cache: "no-store", mode: "cors" });
+        const response = await fetch(ETH_USD_TICKER_URL, { cache: "no-store", mode: "cors" });
         if (!response.ok) return;
         const data = await response.json() as { error?: string[]; result?: Record<string, { c?: string[] }> };
         const ticker = Object.values(data.result ?? {})[0];
         const price = Number(ticker?.c?.[0]);
         if (active && (!data.error || data.error.length === 0) && Number.isFinite(price) && price > 0) {
-          setSolUsdRate(price);
+          setEthUsdRate(price);
         }
       } catch {
-        if (active) setSolUsdRate(null);
+        if (active) setEthUsdRate(null);
       }
     };
-    loadSolPrice();
-    const interval = window.setInterval(loadSolPrice, 300000);
+    loadEthPrice();
+    const interval = window.setInterval(loadEthPrice, 300000);
     return () => { active = false; window.clearInterval(interval); };
   }, []);
 
   useEffect(() => {
-    if (!selectedUpdate && !walletOpen) return;
+    if (!selectedUpdate && !walletOpen && !walletChooserOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       setSelectedUpdate(null);
       setWalletOpen(false);
+      setWalletChooserOpen(false);
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
     return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", closeOnEscape); };
-  }, [selectedUpdate, walletOpen]);
+  }, [selectedUpdate, walletOpen, walletChooserOpen]);
 
   useEffect(() => {
     const nodes = Array.from(document.querySelectorAll<HTMLElement>(".reveal"));
@@ -368,33 +413,69 @@ export default function Home() {
     window.open(href, "_blank", "noopener,noreferrer");
   };
 
-  const connectWallet = async () => {
-    const provider = window.phantom?.solana ?? window.solana;
-    if (!provider?.isPhantom) {
-      const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      if (mobile) {
-        const currentUrl = encodeURIComponent(window.location.href);
-        const ref = encodeURIComponent(window.location.origin);
-        window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${ref}`;
-      } else {
-        window.open("https://phantom.app/download", "_blank", "noopener,noreferrer");
+  const authenticateEthereumWallet = async (provider: EthereumProvider, selectedWallet: "metamask" | "robinhood") => {
+    const currentChain = String(await provider.request({ method: "eth_chainId" }));
+    if (currentChain.toLowerCase() !== ETH_CHAIN_ID) {
+      try {
+        await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: ETH_CHAIN_ID }] });
+      } catch {
+        throw new Error("Switch your wallet to Ethereum Mainnet to continue.");
       }
-      return;
     }
+    const accounts = await provider.request({ method: "eth_requestAccounts" });
+    const address = Array.isArray(accounts) && typeof accounts[0] === "string" ? accounts[0] : "";
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) throw new Error("The wallet did not return a valid Ethereum address.");
+    const challenge = await holderRequest<{ challengeId: string; message: string }>("/v1/public/holder/challenge", "", { method: "POST", body: JSON.stringify({ walletAddress: address, network: "ethereum" }) });
+    const signature = await provider.request({ method: "personal_sign", params: [textToHex(challenge.message), address] });
+    if (typeof signature !== "string" || !signature.startsWith("0x")) throw new Error("The wallet did not return a valid sign-in signature.");
+    const session = await holderRequest<{ sessionToken: string; walletAddress: string }>("/v1/public/holder/verify", "", { method: "POST", body: JSON.stringify({ walletAddress: address, challengeId: challenge.challengeId, signature, network: "ethereum" }) });
+    const dashboard = await holderRequest<HolderDashboard>("/v1/public/holder/dashboard", session.sessionToken);
+    const stored: StoredHolderSession = { sessionToken: session.sessionToken, walletAddress: session.walletAddress || address, walletType: selectedWallet };
+    window.localStorage.setItem(HOLDER_SESSION_KEY, JSON.stringify(stored));
+    setHolderSessionToken(session.sessionToken);
+    setWalletType(selectedWallet);
+    applyHolderDashboard(dashboard);
+    setDashboardTab("overview");
+    setWalletChooserOpen(false);
+    setWalletOpen(true);
+    setToast(`${selectedWallet === "metamask" ? "MetaMask" : "Robinhood Wallet"} connected on Ethereum.`);
+  };
+
+  const connectWallet = async (selectedWallet: "metamask" | "robinhood") => {
     try {
       setWalletLoading(true);
-      if (!provider.signMessage) throw new Error("Phantom message signing is not available in this browser.");
-      const connection = await provider.connect();
-      const address = connection.publicKey.toString();
-      const challenge = await holderRequest<{ challengeId: string; message: string }>("/v1/public/holder/challenge", "", { method: "POST", body: JSON.stringify({ walletAddress: address }) });
-      const signed = await provider.signMessage(new TextEncoder().encode(challenge.message), "utf8");
-      const session = await holderRequest<{ sessionToken: string; dashboard: HolderDashboard }>("/v1/public/holder/session", "", { method: "POST", body: JSON.stringify({ walletAddress: address, challengeId: challenge.challengeId, signature: signatureBase64(signed.signature) }) });
-      window.localStorage.setItem(HOLDER_SESSION_KEY, session.sessionToken);
-      setHolderSessionToken(session.sessionToken);
-      applyHolderDashboard(session.dashboard);
-      setDashboardTab("overview");
-      setWalletOpen(true);
-      setToast("Wallet connected and signed in.");
+      if (selectedWallet === "metamask") {
+        const provider = injectedProviders().find((item) => item.isMetaMask);
+        if (!provider) {
+          window.open("https://metamask.io/download/", "_blank", "noopener,noreferrer");
+          throw new Error("MetaMask was not detected. Install it, then return to connect.");
+        }
+        await authenticateEthereumWallet(provider, selectedWallet);
+        return;
+      }
+
+      const injected = injectedProviders().find((item) => item.isRobinhood || !item.isMetaMask);
+      if (injected) {
+        await authenticateEthereumWallet(injected, selectedWallet);
+        return;
+      }
+      if (!WALLETCONNECT_PROJECT_ID) throw new Error("Add VITE_WALLETCONNECT_PROJECT_ID to enable Robinhood Wallet from a standard browser.");
+      const walletConnectModule = await import("@walletconnect/ethereum-provider");
+      const WalletConnectProvider = walletConnectModule.EthereumProvider;
+      const provider = await WalletConnectProvider.init({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        chains: [1],
+        optionalChains: [1],
+        showQrModal: true,
+        metadata: {
+          name: "CLOUT Studios",
+          description: "Ethereum CLOUT holder sign-in",
+          url: window.location.origin,
+          icons: [`${window.location.origin}${publicPath("/clout-icon.png")}`],
+        },
+      });
+      await provider.connect();
+      await authenticateEthereumWallet(provider as unknown as EthereumProvider, selectedWallet);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Wallet connection was cancelled.");
     } finally {
@@ -407,9 +488,10 @@ export default function Home() {
     if (!holderSessionToken) return;
     setPayoutSaving(true);
     try {
-      const result = await holderRequest<{ dashboard: HolderDashboard }>("/v1/holder/preferences", holderSessionToken, { method: "POST", body: JSON.stringify({ payoutMethod: payoutChoice }) });
-      applyHolderDashboard(result.dashboard);
-      setToast(`${payoutChoice === "solana" ? "Solana" : "Robux"} selected for future distributions.`);
+      await holderRequest("/v1/public/holder/preferences", holderSessionToken, { method: "PATCH", body: JSON.stringify({ payoutPreference: payoutChoice }) });
+      const dashboard = await holderRequest<HolderDashboard>("/v1/public/holder/dashboard", holderSessionToken);
+      applyHolderDashboard(dashboard);
+      setToast(`${payoutChoice === "clout" ? "CLOUT" : "Robux"} selected for future distributions.`);
     } catch (error) {
       const failure = error as HolderApiError;
       setToast(failure.message || "The payout preference could not be saved.");
@@ -423,10 +505,11 @@ export default function Home() {
     setRobloxChecking(true);
     setRobloxError(null);
     try {
-      const result = await holderRequest<{ dashboard: HolderDashboard }>("/v1/holder/roblox", holderSessionToken, { method: "POST", body: JSON.stringify({ username: robloxUsername }) });
-      applyHolderDashboard(result.dashboard);
+      await holderRequest("/v1/public/holder/roblox", holderSessionToken, { method: "POST", body: JSON.stringify({ username: robloxUsername }) });
+      const dashboard = await holderRequest<HolderDashboard>("/v1/public/holder/dashboard", holderSessionToken);
+      applyHolderDashboard(dashboard);
       setRobloxError(null);
-      setToast(`@${result.dashboard.roblox?.username} linked successfully.`);
+      setToast(`@${dashboard.profile.robloxUsername} linked successfully.`);
     } catch (error) {
       const failure = error as HolderApiError;
       setRobloxError({ message: failure.message || "The Roblox account could not be checked.", code: failure.code, joinUrl: failure.joinUrl, profile: failure.profile });
@@ -434,13 +517,12 @@ export default function Home() {
   };
 
   const logoutHolder = async () => {
-    const provider = window.phantom?.solana ?? window.solana;
-    if (holderSessionToken) await holderRequest("/v1/holder/logout", holderSessionToken, { method: "POST", body: "{}" }).catch(() => null);
-    await provider?.disconnect?.().catch(() => undefined);
+    if (holderSessionToken) await holderRequest("/v1/public/holder/logout", holderSessionToken, { method: "POST", body: "{}" }).catch(() => null);
     window.localStorage.removeItem(HOLDER_SESSION_KEY);
     setHolderSessionToken("");
     setHolderDashboard(null);
     setWalletAddress("");
+    setWalletType(null);
     setWalletOpen(false);
     setRobloxUsername("");
     setRobloxError(null);
@@ -453,8 +535,8 @@ export default function Home() {
     if (!holderSessionToken) return;
     setHolderDashboardLoading(true);
     try {
-      const result = await holderRequest<{ dashboard: HolderDashboard }>("/v1/holder/me", holderSessionToken);
-      applyHolderDashboard(result.dashboard);
+      const dashboard = await holderRequest<HolderDashboard>("/v1/public/holder/dashboard", holderSessionToken);
+      applyHolderDashboard(dashboard);
     } catch (error) {
       const failure = error as HolderApiError;
       if (failure.code === "SESSION_EXPIRED") {
@@ -468,12 +550,12 @@ export default function Home() {
     } finally { setHolderDashboardLoading(false); }
   };
 
-  const holderTokenAmount = holderDashboard?.token
-    ? Number(holderDashboard.token.amount).toLocaleString("en-US", { maximumFractionDigits: Math.min(holderDashboard.token.decimals, 6) })
+  const holderTokenAmount = holderDashboard?.holdings
+    ? Number(holderDashboard.holdings.balance).toLocaleString("en-US", { maximumFractionDigits: Math.min(holderDashboard.holdings.decimals, 6) })
     : null;
-  const holderOwnership = holderDashboard?.token?.ownershipPercent ?? 0;
+  const holderOwnership = holderDashboard?.holdings?.ownershipPercent ?? 0;
   const holderProgress = Math.min(100, Math.max(0, holderOwnership * 100));
-  const holderPayoutHistory = holderDashboard?.payoutHistory ?? [];
+  const holderPayoutHistory = holderDashboard?.payouts.history ?? [];
   const formatPayoutDate = (value: string | null) => value
     ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value))
     : "Date pending";
@@ -484,6 +566,7 @@ export default function Home() {
         <a className="brand" href="#top" aria-label="CLOUT Studios home"><CloutMark /><span>CLOUT<small>STUDIOS</small></span></a>
         <nav className={menuOpen ? "nav-links is-open" : "nav-links"} aria-label="Main navigation">
           <a href="#games" onClick={() => setMenuOpen(false)}>Our Games</a>
+          <a href="#play-to-earn" onClick={() => setMenuOpen(false)}>Play to Earn</a>
           <a href="#financials" onClick={() => setMenuOpen(false)}>Reporting</a>
           <a href="#token" onClick={() => setMenuOpen(false)}>Token</a>
           <a href="#updates" onClick={() => setMenuOpen(false)}>Updates</a>
@@ -496,7 +579,7 @@ export default function Home() {
               <button className="connect-button dashboard-button" type="button" onClick={openHolderDashboard}>Open dashboard</button>
             </>
           ) : (
-            <button className="connect-button" type="button" disabled={walletLoading || holderSessionLoading} onClick={connectWallet}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Opening Phantom..." : "Connect wallet"}</button>
+            <button className="connect-button" type="button" disabled={walletLoading || holderSessionLoading} onClick={() => setWalletChooserOpen(true)}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Connecting..." : "Connect wallet"}</button>
           )}
           <button className="menu-button" type="button" aria-label="Toggle navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen((current) => !current)}><span /><span /></button>
         </div>
@@ -513,10 +596,11 @@ export default function Home() {
           <div className="hero-particles"><i /><i /><i /><i /><i /><i /><i /></div>
         </div>
         <div className="hero-copy">
-          <h1>Markets you can play.<br /><em>A studio you can measure.</em></h1>
-          <p className="hero-lede">CLOUT Studios develops market-driven Roblox experiences and publishes the performance behind them, covering revenue, operating costs, buybacks and holder distributions.</p>
+          <span className="hero-eyebrow">CLOUT on Ethereum</span>
+          <h1>Play the market.<br /><em>Earn your CLOUT.</em></h1>
+          <p className="hero-lede">A market-driven Roblox studio where game shares and play-to-earn progression meet an Ethereum-based CLOUT token—reported with the clarity of a modern investing app.</p>
           <div className="hero-actions">
-            <a className="secondary-button" href="#games">Explore our games</a>
+            <a className="secondary-button" href="#games">Explore game shares</a>
             {links.coin && <button className="primary-button" type="button" onClick={() => openLink("coin")}>Acquire CLOUT <ArrowUpRight /></button>}
           </div>
         </div>
@@ -524,7 +608,7 @@ export default function Home() {
 
       <section className="portfolio-section section-shell" id="games">
         <div className="section-heading reveal">
-          <div><h2>Products people want to <em>play.</em></h2></div>
+          <div><span className="section-kicker">01 · Game shares</span><h2>Games built like <em>living markets.</em></h2><p>Follow the studio products, their economies and the performance they contribute to CLOUT.</p></div>
           <button className="link-button" type="button" onClick={() => openLink("robloxGroup")}>Visit our Roblox group <ArrowUpRight /></button>
         </div>
 
@@ -556,6 +640,28 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="earn-section" id="play-to-earn">
+        <div className="section-shell">
+          <div className="section-heading earn-heading reveal">
+            <div><span className="section-kicker">02 · Play to Earn</span><h2>Play. Trade. Level up.<br /><em>Earn CLOUT.</em></h2><p>Your in-game progress becomes a route toward token rewards. Skill, activity and progression—not placeholder balances—drive the experience.</p></div>
+            <span className="ethereum-badge"><i>Ξ</i> Ethereum rewards</span>
+          </div>
+          <div className="earn-flow reveal" aria-label="Play to earn progression">
+            {[
+              ["01", "Play", "Enter CLOUT experiences and build your in-game position."],
+              ["02", "Trade", "Read the market, make moves and grow your in-game CLOUT."],
+              ["03", "Level up", "Turn consistent play and smart trading into progression."],
+              ["04", "Earn CLOUT", "Qualifying rewards can be issued as CLOUT on Ethereum."],
+            ].map(([number, title, copy]) => <article key={title}><span>{number}</span><div><strong>{title}</strong><p>{copy}</p></div><i aria-hidden="true">↗</i></article>)}
+          </div>
+          <div className="earn-bridge reveal">
+            <div><span>IN-GAME CLOUT</span><strong>Play + trade + level</strong></div>
+            <div className="bridge-line"><i /><i /><i /></div>
+            <div><span>ON-CHAIN CLOUT</span><strong>Ethereum ERC-20 rewards</strong></div>
+          </div>
+        </div>
+      </section>
+
       <section className="financial-section" id="financials">
         <div className="section-shell">
           <div className="section-heading financial-heading reveal">
@@ -566,8 +672,8 @@ export default function Home() {
           <div className="report-banner reveal">
             <div><strong>Revenue statements are published every week.</strong><small>{activeStatement.published}</small></div>
             <div className="currency-cluster">
-              <button className="currency-cycle" type="button" onClick={cycleReportingCurrency} aria-label="Cycle reporting currency"><span>View as</span><strong>{reportingCurrency === "usd" ? "$ USD" : <><img src={reportingCurrency === "sol" ? "/solana-logo.png" : "/robux-logo.png"} alt="" aria-hidden="true" />{reportingCurrency === "sol" ? "SOL" : "Robux"}</>}</strong><i>↻</i></button>
-              <small>{solUsdRate ? (reportingCurrency === "sol" ? `Live SOL rate · $${solUsdRate.toFixed(2)}` : reportingCurrency === "robux" ? "DevEx rate · $0.0038 per earned Robux" : `SOL $${solUsdRate.toFixed(2)} · Robux $0.0038`) : "Live SOL rate unavailable"}</small>
+              <button className="currency-cycle" type="button" onClick={cycleReportingCurrency} aria-label="Cycle reporting currency"><span>View as</span><strong>{reportingCurrency === "usd" ? "$ USD" : reportingCurrency === "eth" ? <><b className="eth-inline">Ξ</b>ETH</> : <><img src={publicPath("/robux-logo.png")} alt="" aria-hidden="true" />Robux</>}</strong><i>↻</i></button>
+              <small>{ethUsdRate ? (reportingCurrency === "eth" ? `Live ETH rate · $${ethUsdRate.toFixed(2)}` : reportingCurrency === "robux" ? "DevEx rate · $0.0038 per earned Robux" : `ETH $${ethUsdRate.toFixed(2)} · Robux $0.0038`) : "Live ETH rate unavailable"}</small>
             </div>
           </div>
 
@@ -575,13 +681,13 @@ export default function Home() {
             <div className="report-main">
               <div className="metric-grid">
                 <article><div className="metric-label"><span>Game revenue</span><button className="info-button" type="button" aria-label="About game revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Robux generated across every live CLOUT Studios experience. This statement records {formatCompactNumber(activeStatement.gameRevenueRobux)} Robux, converted using the published DevEx rate.</span></button></div><strong>{formatReportingValue(gameRevenueUsd)}</strong></article>
-                <article><div className="metric-label"><span>Coin revenue</span><button className="info-button" type="button" aria-label="About coin revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Revenue generated by the CLOUT token and studio activity. This statement records {activeStatement.coinRevenueSol} SOL, converted at the current reporting rate.</span></button></div><strong>{formatReportingValue(coinRevenueUsd)}</strong></article>
+                <article><div className="metric-label"><span>CLOUT revenue</span><button className="info-button" type="button" aria-label="About CLOUT revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Revenue attributed to the Ethereum-based CLOUT token and studio activity. This statement records {activeStatement.coinRevenueEth} ETH, converted at the current reporting rate.</span></button></div><strong>{formatReportingValue(coinRevenueUsd)}</strong></article>
                 <article><div className="metric-label"><span>Operating costs</span><button className="info-button" type="button" aria-label="About operating costs"><InfoMark /><span className="info-tooltip" role="tooltip">Advertising, development and maintenance combined for the period: {formatCompactNumber(activeStatement.advertisingRobux)} Robux in advertising and {formatCompactNumber(activeStatement.maintenanceRobux)} Robux in development and maintenance.</span></button></div><strong>{formatReportingValue(operatingCostsUsd)}</strong></article>
               </div>
               <div className="report-chart">
                 <div className="chart-head"><strong>{financialRange === "monthly" ? "Monthly performance" : "All-time performance"}</strong><div className="range-switch"><button className={financialRange === "monthly" ? "active" : ""} type="button" onClick={() => setFinancialRange("monthly")}>Monthly</button><button className={financialRange === "all" ? "active" : ""} type="button" onClick={() => setFinancialRange("all")}>All time</button></div></div>
                 <div className="performance-chart" aria-label="Net studio revenue over time">
-                  {performancePoints.length ? performancePoints.map(([label, amount, value]) => <div className="performance-bar" key={label}><strong>{formatReportingValue(amount)}</strong><i style={{ height: `${value}%` }} /><span>{label}</span></div>) : <p className="chart-unavailable">Live SOL pricing is required to calculate net performance.</p>}
+                  {performancePoints.length ? performancePoints.map(([label, amount, value]) => <div className="performance-bar" key={label}><strong>{formatReportingValue(amount)}</strong><i style={{ height: `${value}%` }} /><span>{label}</span></div>) : <p className="chart-unavailable">Live ETH pricing is required to calculate net performance.</p>}
                 </div>
               </div>
             </div>
@@ -608,7 +714,7 @@ export default function Home() {
             <div className="eligibility-copy">
               <h3>Hold 1% or more to qualify.</h3>
               <p>Wallets holding at least 1% of the published CLOUT supply at a distribution snapshot qualify for that reporting period.</p>
-              <button type="button" disabled={walletLoading || holderSessionLoading} onClick={() => walletAddress ? openHolderDashboard() : connectWallet()}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Opening Phantom..." : walletAddress ? "Open holder dashboard" : "Connect wallet"} <ArrowUpRight /></button>
+              <button type="button" disabled={walletLoading || holderSessionLoading} onClick={() => walletAddress ? openHolderDashboard() : setWalletChooserOpen(true)}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Connecting..." : walletAddress ? "Open holder dashboard" : "Connect Ethereum wallet"} <ArrowUpRight /></button>
             </div>
           </div>
 
@@ -619,13 +725,13 @@ export default function Home() {
               ["Games generate revenue", "CLOUT, Paper Trade and future releases"],
               ["Operations are reported", "Costs, development and reserves"],
               ["The approved pool closes", "A frozen public statement for the period"],
-              ["Eligible holders are paid", "SOL or Robux, based on holder preference"],
+              ["Eligible holders are paid", "CLOUT or Robux, based on holder preference"],
             ].map(([title, copy], index) => <article className="journey-node" key={title}><span>{String(index + 1).padStart(2, "0")}</span><strong>{title}</strong><small>{copy}</small></article>)}
           </div>
 
           <div className="payout-strip">
             <div className="payout-intro"><h3>Choose how you&apos;re paid.</h3></div>
-            <article className="payout-route"><AssetMark type="solana" /><div><strong>Solana</strong><small>Sent directly to the connected wallet</small></div><i>On-chain</i></article>
+            <article className="payout-route"><AssetMark type="clout" /><div><strong>CLOUT</strong><small>ERC-20 token sent to the connected Ethereum wallet</small></div><i>On-chain</i></article>
             <article className="payout-route robux-route"><AssetMark type="robux" /><div><strong>Robux</strong><small>Sent after Roblox account verification</small></div><i>+20% value</i></article>
           </div>
         </div>
@@ -652,7 +758,7 @@ export default function Home() {
 
       {links.coin && <section className="how-section">
         <div className="section-shell">
-          <div className="section-heading how-heading reveal"><div><h2>Acquire CLOUT through <em>Phantom.</em></h2><p>Four clear steps from an empty wallet to a connected holder profile.</p></div><button className="primary-button" type="button" onClick={() => openLink("coin")}>Open official coin <ArrowUpRight /></button></div>
+          <div className="section-heading how-heading reveal"><div><h2>Acquire CLOUT on <em>Ethereum.</em></h2><p>Four clear steps from MetaMask or Robinhood Wallet to a connected holder profile.</p></div><button className="primary-button" type="button" onClick={() => openLink("coin")}>Open official coin <ArrowUpRight /></button></div>
           <div className="acquire-guide reveal">
             <div className="guide-rail">
               <div className="guide-line"><i style={{ width: `${(activeGuideStep / (guideSteps.length - 1)) * 100}%` }} /></div>
@@ -662,15 +768,37 @@ export default function Home() {
               <div><span className="guide-count">{activeGuideStep + 1} / {guideSteps.length}</span><h3>{guideSteps[activeGuideStep].title}</h3><p>{guideSteps[activeGuideStep].copy}</p></div>
               {activeGuideStep < guideSteps.length - 1 ? <button className="guide-next" type="button" aria-label={`Continue to ${guideSteps[activeGuideStep + 1].title}`} onClick={() => setActiveGuideStep((current) => current + 1)}><ArrowRight /></button> : <button className="guide-next final" type="button" onClick={() => openLink("coin")}>Open CLOUT <ArrowUpRight /></button>}
             </div>
-            <div className="safety-note"><LockMark /><p>CLOUT Studios will never ask for a private key or recovery phrase. Connecting Phantom only shares your public wallet address.</p></div>
+            <div className="safety-note"><LockMark /><p>CLOUT Studios will never ask for a private key or recovery phrase. Wallet sign-in requests only a public Ethereum address and a message signature—not a transaction.</p></div>
           </div>
         </div>
       </section>}
 
       <footer>
-        <div className="footer-main section-shell"><a className="brand footer-brand" href="#top"><CloutMark /><span>CLOUT<small>STUDIOS</small></span></a><p>Market-driven games. Transparently operated.</p><div className="footer-links"><a href={links.robloxGroup} target="_blank" rel="noreferrer">Roblox group</a>{links.twitter && <button type="button" onClick={() => openLink("twitter")}>X / Twitter</button>}{links.coin && <button type="button" onClick={() => openLink("coin")}>Acquire CLOUT</button>}</div></div>
-        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span>Solana / Roblox</span></div>
+        <div className="footer-main section-shell"><a className="brand footer-brand" href="#top"><CloutMark /><span>CLOUT<small>STUDIOS</small></span></a><p>Market-driven games. Ethereum-based rewards. Transparently operated.</p><div className="footer-links"><a href={links.robloxGroup} target="_blank" rel="noreferrer">Roblox group</a>{links.twitter && <button type="button" onClick={() => openLink("twitter")}>X / Twitter</button>}{links.coin && <button type="button" onClick={() => openLink("coin")}>Acquire CLOUT</button>}</div></div>
+        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span className="robinhood-note"><i>RH</i> Robinhood-inspired · independent, not affiliated</span><span>Ethereum / Roblox</span></div>
       </footer>
+
+      {walletChooserOpen && !walletAddress && (
+        <div className="wallet-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !walletLoading) setWalletChooserOpen(false); }}>
+          <section className="wallet-panel wallet-chooser" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title">
+            <button className="wallet-close" type="button" aria-label="Close wallet chooser" onClick={() => setWalletChooserOpen(false)}>×</button>
+            <div className="wallet-connect-view">
+              <span className="wallet-connect-kicker">Ethereum Mainnet</span>
+              <h2 id="wallet-chooser-title">Connect your wallet.</h2>
+              <p>Choose the wallet that holds your ERC-20 CLOUT. You will sign a free message to prove ownership—no transaction or spending approval is requested.</p>
+              <div className="wallet-provider-list">
+                <button type="button" disabled={walletLoading} onClick={() => connectWallet("metamask")}>
+                  <span className="provider-mark metamask-mark">M</span><div><strong>MetaMask</strong><small>Browser extension or mobile wallet</small></div><ArrowRight />
+                </button>
+                <button type="button" disabled={walletLoading} onClick={() => connectWallet("robinhood")}>
+                  <span className="provider-mark robinhood-mark">RH</span><div><strong>Robinhood Wallet</strong><small>In-app browser or WalletConnect</small></div><ArrowRight />
+                </button>
+              </div>
+              <div className="wallet-connect-safety"><LockMark /><span><strong>Non-custodial sign-in</strong><small>Your keys stay inside your wallet.</small></span></div>
+            </div>
+          </section>
+        </div>
+      )}
 
       {walletOpen && walletAddress && (
         <div className="wallet-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setWalletOpen(false); }}>
@@ -680,7 +808,7 @@ export default function Home() {
               <header className="holder-dashboard-head">
                 <div><span className="dashboard-kicker">Holder dashboard</span><h2 id="wallet-title">My CLOUT</h2></div>
                 <div className="holder-account-actions">
-                  <span className="wallet-id" title={walletAddress}><i /><span>{walletDisplay}</span></span>
+                  <span className="wallet-id" title={walletAddress}><i /><span>{walletDisplay}</span><small>{walletType === "robinhood" ? "Robinhood" : "MetaMask"}</small></span>
                   <button type="button" onClick={logoutHolder}>Sign out</button>
                 </div>
               </header>
@@ -698,33 +826,33 @@ export default function Home() {
                   <section className="holder-position">
                     <div className="holder-balance">
                       <span>Current CLOUT balance</span>
-                      <strong>{holderTokenAmount ?? (holderDashboard.tokenMint ? "Unavailable" : "Not configured")}</strong>
-                      <small>{holderDashboard.tokenMint ? "Read live from your connected Solana wallet" : "The official token contract has not been published yet"}</small>
+                      <strong>{holderTokenAmount ?? (holderDashboard.holdings.tokenAddress ? "Unavailable" : "Not configured")}</strong>
+                      <small>{holderDashboard.holdings.tokenAddress ? "Read live from the CLOUT ERC-20 contract on Ethereum" : "The official token contract has not been published yet"}</small>
                     </div>
                     <div className="holder-ownership">
-                      <div><span>Ownership</span><strong>{holderDashboard.token ? `${holderOwnership.toLocaleString("en-US", { maximumFractionDigits: 6 })}%` : "Not available"}</strong></div>
-                      <div><span>Revenue share</span><strong className={holderDashboard.eligible ? "is-qualified" : ""}>{holderDashboard.eligible ? "Qualified" : "Below 1%"}</strong></div>
+                      <div><span>Ownership</span><strong>{holderDashboard.holdings.tokenAddress ? `${holderOwnership.toLocaleString("en-US", { maximumFractionDigits: 6 })}%` : "Not available"}</strong></div>
+                      <div><span>Revenue share</span><strong className={holderDashboard.holdings.eligible ? "is-qualified" : ""}>{holderDashboard.holdings.eligible ? "Qualified" : "Below 1%"}</strong></div>
                       <div className="holder-threshold"><span style={{ width: `${holderProgress}%` }} /></div>
-                      <small>{holderDashboard.eligible ? "Qualified at the latest live reading" : `${holderProgress.toLocaleString("en-US", { maximumFractionDigits: 1 })}% of the minimum holding reached`}</small>
+                      <small>{holderDashboard.holdings.eligible ? "Qualified at the latest live reading" : `${holderProgress.toLocaleString("en-US", { maximumFractionDigits: 1 })}% of the minimum holding reached`}</small>
                     </div>
                   </section>
 
-                  {holderDashboard.tokenError && <p className="holder-inline-error">{holderDashboard.tokenError}</p>}
+                  {holderDashboard.holdings.error && <p className="holder-inline-error">{holderDashboard.holdings.error}</p>}
 
                   <section className="holder-paid-summary" aria-label="Completed payouts">
                     <div className="paid-summary-intro"><span>Lifetime distributions</span><h3>Paid to this account.</h3><p>Confirmed holder payouts linked to this wallet.</p></div>
-                    <div className="paid-asset"><AssetMark type="solana" /><div><span>Paid in Solana</span><strong>{holderDashboard.paid.sol.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} SOL</strong></div></div>
-                    <div className="paid-asset"><AssetMark type="robux" /><div><span>Paid in Robux</span><strong>{holderDashboard.paid.robux.toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong></div></div>
+                    <div className="paid-asset"><AssetMark type="clout" /><div><span>Paid in CLOUT</span><strong>{holderDashboard.payouts.totalClout.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} CLOUT</strong></div></div>
+                    <div className="paid-asset"><AssetMark type="robux" /><div><span>Paid in Robux</span><strong>{holderDashboard.payouts.totalRobux.toLocaleString("en-US", { maximumFractionDigits: 0 })}</strong></div></div>
                   </section>
 
                   <section className="holder-history">
                     <div className="holder-section-title"><div><span>Distribution history</span><h3>Completed payouts</h3></div><button type="button" onClick={() => setDashboardTab("payouts")}>Manage payout method <ArrowRight /></button></div>
                     {holderPayoutHistory.length ? <div className="payout-history-list">
                       {holderPayoutHistory.map((payout, index) => (
-                        <article key={`${payout.signature || payout.proof || payout.paidAt}-${index}`}>
-                          <AssetMark type={payout.method} />
-                          <div><strong>{payout.method === "solana" ? `${(payout.sol ?? 0).toLocaleString("en-US", { maximumFractionDigits: 6 })} SOL` : `${(payout.robux ?? 0).toLocaleString("en-US")} Robux`}</strong><small>{formatPayoutDate(payout.paidAt)}</small></div>
-                          {payout.signature ? <a href={`https://solscan.io/tx/${payout.signature}`} target="_blank" rel="noreferrer">View transaction <ArrowUpRight /></a> : payout.proof ? <a href={payout.proof} target="_blank" rel="noreferrer">View proof <ArrowUpRight /></a> : <span>Confirmed</span>}
+                        <article key={`${payout.payoutId}-${index}`}>
+                          <AssetMark type={payout.asset} />
+                          <div><strong>{payout.asset === "clout" ? `${payout.amount.toLocaleString("en-US", { maximumFractionDigits: 6 })} CLOUT` : `${payout.amount.toLocaleString("en-US")} Robux`}</strong><small>{formatPayoutDate(payout.completedAt || payout.createdAt)}</small></div>
+                          {payout.txHash ? <a href={`https://etherscan.io/tx/${payout.txHash}`} target="_blank" rel="noreferrer">View transaction <ArrowUpRight /></a> : <span>Confirmed</span>}
                         </article>
                       ))}
                     </div> : <div className="holder-empty"><span /><h4>No completed payouts yet</h4><p>Your first confirmed distribution will appear here with its date and public proof.</p></div>}
@@ -734,32 +862,32 @@ export default function Home() {
                 <div className="holder-view holder-payout-settings">
                   <div className="holder-view-heading"><span>Payout settings</span><h3>Choose how distributions reach you.</h3><p>Your preference is saved to this wallet account. Robux requires a verified Roblox account in the CLOUT group.</p></div>
                   <div className="holder-methods">
-                    <button className={payoutChoice === "solana" ? "active" : ""} type="button" onClick={() => setPayoutChoice("solana")}>
-                      <AssetMark type="solana" /><div><strong>Solana</strong><span>Sent directly to this connected wallet</span><small>On-chain payout</small></div><i aria-hidden="true" />
+                    <button className={payoutChoice === "clout" ? "active" : ""} type="button" onClick={() => setPayoutChoice("clout")}>
+                      <AssetMark type="clout" /><div><strong>CLOUT</strong><span>Sent directly to this Ethereum wallet</span><small>ERC-20 payout</small></div><i aria-hidden="true" />
                     </button>
-                    <button className={payoutChoice === "robux" ? "active" : ""} type="button" onClick={() => { setPayoutChoice("robux"); if (!holderDashboard.roblox?.groupMember) setDashboardTab("roblox"); }}>
+                    <button className={payoutChoice === "robux" ? "active" : ""} type="button" onClick={() => { setPayoutChoice("robux"); if (!holderDashboard.profile.robloxGroupMember) setDashboardTab("roblox"); }}>
                       <AssetMark type="robux" /><div><strong>Robux</strong><span>Sent after Roblox account verification</span><small>20% additional value</small></div><i aria-hidden="true" />
                     </button>
                   </div>
                   <div className="holder-method-footer">
-                    <div><span>Current selection</span><strong>{holderDashboard.payoutMethod === "solana" ? "Solana" : "Robux"}</strong></div>
-                    <button className="primary-button" type="button" disabled={payoutSaving || payoutChoice === holderDashboard.payoutMethod} onClick={savePayoutPreference}>{payoutSaving ? "Saving..." : "Save payout preference"}</button>
+                    <div><span>Current selection</span><strong>{holderDashboard.profile.payoutPreference === "clout" ? "CLOUT" : "Robux"}</strong></div>
+                    <button className="primary-button" type="button" disabled={payoutSaving || payoutChoice === holderDashboard.profile.payoutPreference} onClick={savePayoutPreference}>{payoutSaving ? "Saving..." : "Save payout preference"}</button>
                   </div>
-                  {!holderDashboard.roblox?.groupMember && <button className="holder-account-prompt" type="button" onClick={() => setDashboardTab("roblox")}><span>Want Robux payouts?</span><strong>Verify your Roblox account first</strong><ArrowRight /></button>}
+                  {!holderDashboard.profile.robloxGroupMember && <button className="holder-account-prompt" type="button" onClick={() => setDashboardTab("roblox")}><span>Want Robux payouts?</span><strong>Verify your Roblox account first</strong><ArrowRight /></button>}
                 </div>
               ) : (
                 <div className="holder-view holder-roblox-settings">
                   <div className="holder-view-heading"><span>Roblox account</span><h3>Link your Roblox identity.</h3><p>Enter your Roblox username. We will confirm that the account exists and is a member of the CLOUT group.</p></div>
 
-                  {holderDashboard.roblox && <div className="verified-roblox-profile">
-                    {holderDashboard.roblox.avatarUrl ? <img src={holderDashboard.roblox.avatarUrl} alt={`${holderDashboard.roblox.username} Roblox avatar`} /> : <span>{holderDashboard.roblox.username.slice(0, 1).toUpperCase()}</span>}
-                    <div><small>Verified account</small><strong>{holderDashboard.roblox.displayName}</strong><p>@{holderDashboard.roblox.username}</p></div>
+                  {holderDashboard.profile.robloxUsername && <div className="verified-roblox-profile">
+                    {holderDashboard.profile.robloxAvatarUrl ? <img src={holderDashboard.profile.robloxAvatarUrl} alt={`${holderDashboard.profile.robloxUsername} Roblox avatar`} /> : <span>{holderDashboard.profile.robloxUsername.slice(0, 1).toUpperCase()}</span>}
+                    <div><small>Verified account</small><strong>{holderDashboard.profile.robloxDisplayName || holderDashboard.profile.robloxUsername}</strong><p>@{holderDashboard.profile.robloxUsername}</p></div>
                     <div className="group-verified"><i /> CLOUT group member</div>
                   </div>}
 
                   <form className="roblox-link-form" onSubmit={linkRobloxAccount}>
                     <label htmlFor="roblox-username">Roblox username</label>
-                    <div><span>@</span><input id="roblox-username" name="robloxUsername" value={robloxUsername} onChange={(event) => setRobloxUsername(event.target.value)} placeholder="Your username" autoComplete="off" maxLength={20} /><button type="submit" disabled={robloxChecking || robloxUsername.trim().length < 3}>{robloxChecking ? "Checking..." : holderDashboard.roblox ? "Check and update" : "Check account"}</button></div>
+                    <div><span>@</span><input id="roblox-username" name="robloxUsername" value={robloxUsername} onChange={(event) => setRobloxUsername(event.target.value)} placeholder="Your username" autoComplete="off" maxLength={20} /><button type="submit" disabled={robloxChecking || robloxUsername.trim().length < 3}>{robloxChecking ? "Checking..." : holderDashboard.profile.robloxUsername ? "Check and update" : "Check account"}</button></div>
                     <small>Use your Roblox username, not your display name.</small>
                   </form>
 
@@ -768,7 +896,7 @@ export default function Home() {
                     <div><strong>{robloxError.code === "ROBLOX_GROUP_REQUIRED" ? "Group membership required" : "Account could not be linked"}</strong><p>{robloxError.message}</p>{robloxError.joinUrl && <a href={robloxError.joinUrl} target="_blank" rel="noreferrer">Join the CLOUT group <ArrowUpRight /></a>}</div>
                   </div>}
 
-                  <div className="roblox-requirements"><div><i className={holderDashboard.roblox ? "done" : ""} /><span><strong>Valid Roblox account</strong><small>The username must resolve to an active Roblox profile.</small></span></div><div><i className={holderDashboard.roblox?.groupMember ? "done" : ""} /><span><strong>CLOUT group member</strong><small>Membership is required before selecting Robux payouts.</small></span></div></div>
+                  <div className="roblox-requirements"><div><i className={holderDashboard.profile.robloxUsername ? "done" : ""} /><span><strong>Valid Roblox account</strong><small>The username must resolve to an active Roblox profile.</small></span></div><div><i className={holderDashboard.profile.robloxGroupMember ? "done" : ""} /><span><strong>CLOUT group member</strong><small>Membership is required before selecting Robux payouts.</small></span></div></div>
                 </div>
               )}
             </div>
