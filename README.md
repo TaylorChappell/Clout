@@ -34,7 +34,7 @@ For the prebuilt direct-upload site, edit `config.js` and place the same value i
 3. Set **Source** to **GitHub Actions**.
 4. Push to the `main` branch, or run the **Deploy CLOUT Studios to GitHub Pages** workflow manually.
 
-The included workflow detects the repository subpath automatically, builds the static site and publishes it to GitHub Pages. The `/admin`, `/terms` and `/privacy` routes are included in the export.
+The included workflow builds the site for the `https://clout.game` domain root and publishes it to GitHub Pages. The `public/CNAME` file keeps the custom domain attached during deployment. The `/admin`, `/terms` and `/privacy` routes are included in the export.
 
 Do not publish the source `index.html` directly. That file intentionally points to `src/main.tsx` for Vite development. GitHub Pages must publish the compiled `dist` directory, which the included workflow handles automatically. A separate direct-upload ZIP is also supplied for branch-based Pages hosting.
 

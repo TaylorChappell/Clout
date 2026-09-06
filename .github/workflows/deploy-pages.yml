@@ -37,7 +37,8 @@ jobs:
       - name: Build static site
         run: npm run build
         env:
-          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          # clout.game serves this repository from the domain root.
+          VITE_BASE_PATH: /
           VITE_BACKEND_API_URL: https://cloutstudiosserver-production.up.railway.app
           VITE_WALLETCONNECT_PROJECT_ID: ${{ vars.WALLETCONNECT_PROJECT_ID }}
 
