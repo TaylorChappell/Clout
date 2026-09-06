@@ -145,10 +145,10 @@ function backendAssetUrl(value?: string | null) {
 }
 
 const guideSteps = [
-  { icon: "metamask", title: "Choose your wallet", copy: "Connect MetaMask or Robinhood Wallet to Ethereum Mainnet." },
+  { icon: "robinhood", title: "Choose your wallet", copy: "Connect Robinhood Wallet or MetaMask to your CLOUT holder profile." },
   { icon: "ethereum", title: "Fund with ETH", copy: "Keep enough ETH for the CLOUT purchase and Ethereum network fees." },
-  { icon: "verify", title: "Verify the contract", copy: "Use only the contract shown on this site and the official CLOUT X account." },
-  { icon: "connect", title: "Acquire and connect", copy: "Acquire ERC-20 CLOUT, then connect the same wallet to open your holder dashboard." },
+  { icon: "verify", title: "Verify CLOUT", copy: "Use only the coin link shown on this site and the official CLOUT social accounts." },
+  { icon: "connect", title: "Acquire and connect", copy: "Acquire CLOUT through the official Robinhood listing, then connect the same wallet to open your dashboard." },
 ] as const;
 
 function ArrowUpRight() {
@@ -180,12 +180,12 @@ function UpdateVisual({ update, compact = false }: { update: StudioUpdate; compa
   return <div className={`update-visual update-${update.category}${compact ? " is-compact" : ""}`} aria-hidden="true"><span className="update-visual-grid" /><img src={publicPath("/clout-icon.png")} alt="" /><div><small>CLOUT STUDIOS</small><strong>{update.category === "paper" ? "PAPER TRADE" : update.category.toUpperCase()}</strong></div></div>;
 }
 
-function StepIcon({ type }: { type: "metamask" | "ethereum" | "verify" | "connect" }) {
-  if (type === "metamask") {
-    return <span className="wallet-step-glyph">M</span>;
+function StepIcon({ type }: { type: "robinhood" | "ethereum" | "verify" | "connect" }) {
+  if (type === "robinhood") {
+    return <img className="platform-step-logo" src={publicPath("/robinhood.png")} alt="" aria-hidden="true" />;
   }
   if (type === "ethereum") {
-    return <span className="wallet-step-glyph">Ξ</span>;
+    return <img className="platform-step-logo" src={publicPath("/eth.png")} alt="" aria-hidden="true" />;
   }
   if (type === "verify") {
     return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8 19 7v5.2c0 4.1-2.8 6.8-7 8-4.2-1.2-7-3.9-7-8V7l7-3.2Z" /><path d="m8.7 12 2 2 4.6-4.5" /></svg>;
@@ -596,19 +596,19 @@ export default function Home() {
           <div className="hero-particles"><i /><i /><i /><i /><i /><i /><i /></div>
         </div>
         <div className="hero-copy">
-          <span className="hero-eyebrow">CLOUT on Ethereum</span>
+          <span className="hero-eyebrow"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /> CLOUT is coming to Robinhood</span>
           <h1>Play the market.<br /><em>Earn your CLOUT.</em></h1>
-          <p className="hero-lede">A market-driven Roblox studio where game shares and play-to-earn progression meet an Ethereum-based CLOUT token—reported with the clarity of a modern investing app.</p>
+          <p className="hero-lede">CLOUT Studios develops market-driven Roblox experiences and publishes the performance behind them, covering revenue, operating costs, buybacks and holder distributions.</p>
           <div className="hero-actions">
-            <a className="secondary-button" href="#games">Explore game shares</a>
-            {links.coin && <button className="primary-button" type="button" onClick={() => openLink("coin")}>Acquire CLOUT <ArrowUpRight /></button>}
+            <a className="primary-button" href="#games">Explore Game Shares <ArrowUpRight /></a>
+            <a className="secondary-button" href="#play-to-earn">Explore Play to Earn <ArrowUpRight /></a>
           </div>
         </div>
       </section>
 
       <section className="portfolio-section section-shell" id="games">
         <div className="section-heading reveal">
-          <div><span className="section-kicker">01 · Game shares</span><h2>Games built like <em>living markets.</em></h2><p>Follow the studio products, their economies and the performance they contribute to CLOUT.</p></div>
+          <div><span className="section-kicker">Game Shares</span><h2>Games built like <em>living markets.</em></h2><p>Follow the studio products, their economies and the performance they contribute to CLOUT.</p></div>
           <button className="link-button" type="button" onClick={() => openLink("robloxGroup")}>Visit our Roblox group <ArrowUpRight /></button>
         </div>
 
@@ -620,8 +620,8 @@ export default function Home() {
             <div className="game-content">
               <div className="game-topline"><span className="status-dot"><i /> Launched</span></div>
               <h3>CLOUT</h3>
-              <p>A social memecoin market simulator built for the trenches. Trade in a Robux economy or earn your way through a completely separate free market.</p>
-              <div className="game-tags"><span>Player-driven</span><span>Robux market</span><span>Free market</span></div>
+              <p>Robinhood&apos;s first play-to-earn game and Roblox&apos;s first and most realistic memecoin simulator. Trade, level up and turn your in-game CLOUT into real CLOUT rewards.</p>
+              <div className="game-tags"><span>Robinhood</span><span>Play to earn</span><span>Memecoin simulator</span></div>
               <button type="button" onClick={() => openLink("robloxGame")}>View CLOUT <ArrowUpRight /></button>
             </div>
           </article>
@@ -643,21 +643,16 @@ export default function Home() {
       <section className="earn-section" id="play-to-earn">
         <div className="section-shell">
           <div className="section-heading earn-heading reveal">
-            <div><span className="section-kicker">02 · Play to Earn</span><h2>Play. Trade. Level up.<br /><em>Earn CLOUT.</em></h2><p>Your in-game progress becomes a route toward token rewards. Skill, activity and progression—not placeholder balances—drive the experience.</p></div>
-            <span className="ethereum-badge"><i>Ξ</i> Ethereum rewards</span>
+            <div><span className="section-kicker">Play to Earn</span><h2>Play. Trade. Level up.<br /><em>Earn CLOUT.</em></h2><p>Your in-game progress becomes a route toward CLOUT rewards. Skill, activity and progression drive the experience.</p></div>
+            <span className="platform-badge"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /> Built for Robinhood</span>
           </div>
           <div className="earn-flow reveal" aria-label="Play to earn progression">
             {[
-              ["01", "Play", "Enter CLOUT experiences and build your in-game position."],
-              ["02", "Trade", "Read the market, make moves and grow your in-game CLOUT."],
-              ["03", "Level up", "Turn consistent play and smart trading into progression."],
-              ["04", "Earn CLOUT", "Qualifying rewards can be issued as CLOUT on Ethereum."],
-            ].map(([number, title, copy]) => <article key={title}><span>{number}</span><div><strong>{title}</strong><p>{copy}</p></div><i aria-hidden="true">↗</i></article>)}
-          </div>
-          <div className="earn-bridge reveal">
-            <div><span>IN-GAME CLOUT</span><strong>Play + trade + level</strong></div>
-            <div className="bridge-line"><i /><i /><i /></div>
-            <div><span>ON-CHAIN CLOUT</span><strong>Ethereum ERC-20 rewards</strong></div>
+              ["Play", "Enter CLOUT experiences and build your in-game position."],
+              ["Trade", "Read the market, make moves and grow your in-game CLOUT."],
+              ["Level up", "Turn consistent play and smart trading into progression."],
+              ["Earn CLOUT", "Qualifying gameplay rewards can be issued as CLOUT through Robinhood."],
+            ].map(([title, copy]) => <article key={title}><div><strong>{title}</strong><p>{copy}</p></div><i aria-hidden="true">↗</i></article>)}
           </div>
         </div>
       </section>
@@ -672,8 +667,8 @@ export default function Home() {
           <div className="report-banner reveal">
             <div><strong>Revenue statements are published every week.</strong><small>{activeStatement.published}</small></div>
             <div className="currency-cluster">
-              <button className="currency-cycle" type="button" onClick={cycleReportingCurrency} aria-label="Cycle reporting currency"><span>View as</span><strong>{reportingCurrency === "usd" ? "$ USD" : reportingCurrency === "eth" ? <><b className="eth-inline">Ξ</b>ETH</> : <><img src={publicPath("/robux-logo.png")} alt="" aria-hidden="true" />Robux</>}</strong><i>↻</i></button>
-              <small>{ethUsdRate ? (reportingCurrency === "eth" ? `Live ETH rate · $${ethUsdRate.toFixed(2)}` : reportingCurrency === "robux" ? "DevEx rate · $0.0038 per earned Robux" : `ETH $${ethUsdRate.toFixed(2)} · Robux $0.0038`) : "Live ETH rate unavailable"}</small>
+              <button className="currency-cycle" type="button" onClick={cycleReportingCurrency} aria-label="Cycle reporting currency"><span>View as</span><strong>{reportingCurrency === "usd" ? "$ USD" : reportingCurrency === "eth" ? <><img src={publicPath("/eth.png")} alt="" aria-hidden="true" />ETH</> : <><img src={publicPath("/robux-logo.png")} alt="" aria-hidden="true" />Robux</>}</strong><i>↻</i></button>
+              <small>{ethUsdRate ? (reportingCurrency === "eth" ? `Live ETH rate: $${ethUsdRate.toFixed(2)}` : reportingCurrency === "robux" ? "DevEx rate: $0.0038 per earned Robux" : `ETH $${ethUsdRate.toFixed(2)} | Robux $0.0038`) : "Live ETH rate unavailable"}</small>
             </div>
           </div>
 
@@ -681,7 +676,7 @@ export default function Home() {
             <div className="report-main">
               <div className="metric-grid">
                 <article><div className="metric-label"><span>Game revenue</span><button className="info-button" type="button" aria-label="About game revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Robux generated across every live CLOUT Studios experience. This statement records {formatCompactNumber(activeStatement.gameRevenueRobux)} Robux, converted using the published DevEx rate.</span></button></div><strong>{formatReportingValue(gameRevenueUsd)}</strong></article>
-                <article><div className="metric-label"><span>CLOUT revenue</span><button className="info-button" type="button" aria-label="About CLOUT revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Revenue attributed to the Ethereum-based CLOUT token and studio activity. This statement records {activeStatement.coinRevenueEth} ETH, converted at the current reporting rate.</span></button></div><strong>{formatReportingValue(coinRevenueUsd)}</strong></article>
+                <article><div className="metric-label"><span>CLOUT revenue</span><button className="info-button" type="button" aria-label="About CLOUT revenue"><InfoMark /><span className="info-tooltip" role="tooltip">Revenue attributed to CLOUT coin and studio activity. This statement records {activeStatement.coinRevenueEth} ETH, converted at the current reporting rate.</span></button></div><strong>{formatReportingValue(coinRevenueUsd)}</strong></article>
                 <article><div className="metric-label"><span>Operating costs</span><button className="info-button" type="button" aria-label="About operating costs"><InfoMark /><span className="info-tooltip" role="tooltip">Advertising, development and maintenance combined for the period: {formatCompactNumber(activeStatement.advertisingRobux)} Robux in advertising and {formatCompactNumber(activeStatement.maintenanceRobux)} Robux in development and maintenance.</span></button></div><strong>{formatReportingValue(operatingCostsUsd)}</strong></article>
               </div>
               <div className="report-chart">
@@ -714,7 +709,7 @@ export default function Home() {
             <div className="eligibility-copy">
               <h3>Hold 1% or more to qualify.</h3>
               <p>Wallets holding at least 1% of the published CLOUT supply at a distribution snapshot qualify for that reporting period.</p>
-              <button type="button" disabled={walletLoading || holderSessionLoading} onClick={() => walletAddress ? openHolderDashboard() : setWalletChooserOpen(true)}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Connecting..." : walletAddress ? "Open holder dashboard" : "Connect Ethereum wallet"} <ArrowUpRight /></button>
+              <button type="button" disabled={walletLoading || holderSessionLoading} onClick={() => walletAddress ? openHolderDashboard() : setWalletChooserOpen(true)}>{holderSessionLoading ? "Restoring session..." : walletLoading ? "Connecting..." : walletAddress ? "Open holder dashboard" : "Connect wallet"} <ArrowUpRight /></button>
             </div>
           </div>
 
@@ -726,12 +721,12 @@ export default function Home() {
               ["Operations are reported", "Costs, development and reserves"],
               ["The approved pool closes", "A frozen public statement for the period"],
               ["Eligible holders are paid", "CLOUT or Robux, based on holder preference"],
-            ].map(([title, copy], index) => <article className="journey-node" key={title}><span>{String(index + 1).padStart(2, "0")}</span><strong>{title}</strong><small>{copy}</small></article>)}
+            ].map(([title, copy]) => <article className="journey-node" key={title}><strong>{title}</strong><small>{copy}</small></article>)}
           </div>
 
           <div className="payout-strip">
             <div className="payout-intro"><h3>Choose how you&apos;re paid.</h3></div>
-            <article className="payout-route"><AssetMark type="clout" /><div><strong>CLOUT</strong><small>ERC-20 token sent to the connected Ethereum wallet</small></div><i>On-chain</i></article>
+            <article className="payout-route"><AssetMark type="clout" /><div><strong>CLOUT</strong><small>CLOUT sent to your connected holder wallet</small></div><i>Robinhood</i></article>
             <article className="payout-route robux-route"><AssetMark type="robux" /><div><strong>Robux</strong><small>Sent after Roblox account verification</small></div><i>+20% value</i></article>
           </div>
         </div>
@@ -758,24 +753,24 @@ export default function Home() {
 
       {links.coin && <section className="how-section">
         <div className="section-shell">
-          <div className="section-heading how-heading reveal"><div><h2>Acquire CLOUT on <em>Ethereum.</em></h2><p>Four clear steps from MetaMask or Robinhood Wallet to a connected holder profile.</p></div><button className="primary-button" type="button" onClick={() => openLink("coin")}>Open official coin <ArrowUpRight /></button></div>
+          <div className="section-heading how-heading reveal"><div><h2>Acquire CLOUT through <em>Robinhood.</em></h2><p>Connect a supported wallet, verify the official CLOUT coin and open your holder profile.</p></div><button className="primary-button" type="button" onClick={() => openLink("coin")}>Open CLOUT on Robinhood <ArrowUpRight /></button></div>
           <div className="acquire-guide reveal">
             <div className="guide-rail">
               <div className="guide-line"><i style={{ width: `${(activeGuideStep / (guideSteps.length - 1)) * 100}%` }} /></div>
               {guideSteps.map((step, index) => <button className={`step-${step.icon} ${activeGuideStep === index ? "active" : activeGuideStep > index ? "complete" : ""}`} type="button" onClick={() => setActiveGuideStep(index)} aria-current={activeGuideStep === index ? "step" : undefined} key={step.title}><span className="step-icon"><StepIcon type={step.icon} /></span><strong>{step.title}</strong></button>)}
             </div>
             <div className="guide-focus" key={activeGuideStep}>
-              <div><span className="guide-count">{activeGuideStep + 1} / {guideSteps.length}</span><h3>{guideSteps[activeGuideStep].title}</h3><p>{guideSteps[activeGuideStep].copy}</p></div>
+              <div><h3>{guideSteps[activeGuideStep].title}</h3><p>{guideSteps[activeGuideStep].copy}</p></div>
               {activeGuideStep < guideSteps.length - 1 ? <button className="guide-next" type="button" aria-label={`Continue to ${guideSteps[activeGuideStep + 1].title}`} onClick={() => setActiveGuideStep((current) => current + 1)}><ArrowRight /></button> : <button className="guide-next final" type="button" onClick={() => openLink("coin")}>Open CLOUT <ArrowUpRight /></button>}
             </div>
-            <div className="safety-note"><LockMark /><p>CLOUT Studios will never ask for a private key or recovery phrase. Wallet sign-in requests only a public Ethereum address and a message signature—not a transaction.</p></div>
+            <div className="safety-note"><LockMark /><p>CLOUT Studios will never ask for a private key or recovery phrase. Wallet sign-in requests only a public address and a message signature. It does not request a transaction.</p></div>
           </div>
         </div>
       </section>}
 
       <footer>
-        <div className="footer-main section-shell"><a className="brand footer-brand" href="#top"><CloutMark /><span>CLOUT<small>STUDIOS</small></span></a><p>Market-driven games. Ethereum-based rewards. Transparently operated.</p><div className="footer-links"><a href={links.robloxGroup} target="_blank" rel="noreferrer">Roblox group</a>{links.twitter && <button type="button" onClick={() => openLink("twitter")}>X / Twitter</button>}{links.coin && <button type="button" onClick={() => openLink("coin")}>Acquire CLOUT</button>}</div></div>
-        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span className="robinhood-note"><i>RH</i> Robinhood-inspired · independent, not affiliated</span><span>Ethereum / Roblox</span></div>
+        <div className="footer-main section-shell"><a className="brand footer-brand" href="#top"><CloutMark /><span>CLOUT<small>STUDIOS</small></span></a><p>Market-driven games. CLOUT rewards. Transparent reporting.</p><div className="footer-links"><a href={links.robloxGroup} target="_blank" rel="noreferrer">Roblox group</a>{links.twitter && <button type="button" onClick={() => openLink("twitter")}>X / Twitter</button>}{links.coin && <button type="button" onClick={() => openLink("coin")}>Acquire CLOUT</button>}</div></div>
+        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span className="footer-platform"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /> Robinhood</span><span>Robinhood / Roblox</span></div>
       </footer>
 
       {walletChooserOpen && !walletAddress && (
@@ -783,15 +778,15 @@ export default function Home() {
           <section className="wallet-panel wallet-chooser" role="dialog" aria-modal="true" aria-labelledby="wallet-chooser-title">
             <button className="wallet-close" type="button" aria-label="Close wallet chooser" onClick={() => setWalletChooserOpen(false)}>×</button>
             <div className="wallet-connect-view">
-              <span className="wallet-connect-kicker">Ethereum Mainnet</span>
+              <span className="wallet-connect-kicker">CLOUT wallet access</span>
               <h2 id="wallet-chooser-title">Connect your wallet.</h2>
-              <p>Choose the wallet that holds your ERC-20 CLOUT. You will sign a free message to prove ownership—no transaction or spending approval is requested.</p>
+              <p>Choose Robinhood Wallet or MetaMask. You will sign a free message to prove ownership. No transaction or spending approval is requested.</p>
               <div className="wallet-provider-list">
                 <button type="button" disabled={walletLoading} onClick={() => connectWallet("metamask")}>
                   <span className="provider-mark metamask-mark">M</span><div><strong>MetaMask</strong><small>Browser extension or mobile wallet</small></div><ArrowRight />
                 </button>
                 <button type="button" disabled={walletLoading} onClick={() => connectWallet("robinhood")}>
-                  <span className="provider-mark robinhood-mark">RH</span><div><strong>Robinhood Wallet</strong><small>In-app browser or WalletConnect</small></div><ArrowRight />
+                  <span className="provider-mark robinhood-mark"><img src={publicPath("/robinhood.png")} alt="" aria-hidden="true" /></span><div><strong>Robinhood Wallet</strong><small>In-app browser or WalletConnect</small></div><ArrowRight />
                 </button>
               </div>
               <div className="wallet-connect-safety"><LockMark /><span><strong>Non-custodial sign-in</strong><small>Your keys stay inside your wallet.</small></span></div>
@@ -827,7 +822,7 @@ export default function Home() {
                     <div className="holder-balance">
                       <span>Current CLOUT balance</span>
                       <strong>{holderTokenAmount ?? (holderDashboard.holdings.tokenAddress ? "Unavailable" : "Not configured")}</strong>
-                      <small>{holderDashboard.holdings.tokenAddress ? "Read live from the CLOUT ERC-20 contract on Ethereum" : "The official token contract has not been published yet"}</small>
+                      <small>{holderDashboard.holdings.tokenAddress ? "Read live from the official CLOUT coin contract" : "The official coin contract has not been published yet"}</small>
                     </div>
                     <div className="holder-ownership">
                       <div><span>Ownership</span><strong>{holderDashboard.holdings.tokenAddress ? `${holderOwnership.toLocaleString("en-US", { maximumFractionDigits: 6 })}%` : "Not available"}</strong></div>
@@ -863,7 +858,7 @@ export default function Home() {
                   <div className="holder-view-heading"><span>Payout settings</span><h3>Choose how distributions reach you.</h3><p>Your preference is saved to this wallet account. Robux requires a verified Roblox account in the CLOUT group.</p></div>
                   <div className="holder-methods">
                     <button className={payoutChoice === "clout" ? "active" : ""} type="button" onClick={() => setPayoutChoice("clout")}>
-                      <AssetMark type="clout" /><div><strong>CLOUT</strong><span>Sent directly to this Ethereum wallet</span><small>ERC-20 payout</small></div><i aria-hidden="true" />
+                      <AssetMark type="clout" /><div><strong>CLOUT</strong><span>Sent directly to this holder wallet</span><small>CLOUT payout</small></div><i aria-hidden="true" />
                     </button>
                     <button className={payoutChoice === "robux" ? "active" : ""} type="button" onClick={() => { setPayoutChoice("robux"); if (!holderDashboard.profile.robloxGroupMember) setDashboardTab("roblox"); }}>
                       <AssetMark type="robux" /><div><strong>Robux</strong><span>Sent after Roblox account verification</span><small>20% additional value</small></div><i aria-hidden="true" />

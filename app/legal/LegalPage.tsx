@@ -66,7 +66,7 @@ export default function LegalPage({ label, title, introduction, sections }: Lega
           <p>Market-driven games. Transparently operated.</p>
           <div className="footer-links"><a href={robloxGroup} target="_blank" rel="noreferrer">Roblox group</a><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></div>
         </div>
-        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span>Ethereum / Roblox</span></div>
+        <div className="footer-bottom section-shell"><span>© 2026 CLOUT Studios</span><nav className="footer-legal-links" aria-label="Legal"><a href={publicPath("/terms/")}>Terms</a><a href={publicPath("/privacy/")}>Privacy</a></nav><span>Robinhood / Roblox</span></div>
       </footer>
     </main>
   );

@@ -1,6 +1,6 @@
 # CLOUT Studios frontend
 
-The CLOUT Studios Ethereum frontend, packaged as a static Vite/React project for GitHub Pages. It includes MetaMask sign-in, Robinhood Wallet through WalletConnect, persistent holder sessions, ETH reporting, a holder dashboard and separate Game Shares and Play-to-Earn sections.
+The CLOUT Studios Robinhood-focused frontend, packaged as a static Vite/React project for GitHub Pages. It includes MetaMask sign-in, Robinhood Wallet through WalletConnect, persistent holder sessions, ETH reporting, a holder dashboard and separate Game Shares and Play-to-Earn sections.
 
 ## Local development
 
