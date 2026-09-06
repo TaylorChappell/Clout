@@ -19,7 +19,7 @@ let adminToken = "";
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
+  if (init?.body !== undefined && init.body !== null) headers.set("Content-Type", "application/json");
   if (adminToken) headers.set("Authorization", `Bearer ${adminToken}`);
   const response = await fetch(`${API_URL}${path}`, { ...init, headers, mode: "cors", credentials: "omit" });
   const payload = await response.json().catch(() => ({})) as T & { error?: string };
